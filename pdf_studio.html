@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JRDZ | PDF Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<style>
+    :root {
+        --pelco-yellow: #fce704;
+        --pelco-green: #037d3c;
+        --pelco-blue: #0102f3;
+        --pelco-red: #fb0908;
+        --primary: #18181b;
+        --bg: #ffffff;
+        --surface: #ffffff;
+        --border: #f1f1f4;
+        --text-main: #09090b;
+        --text-sub: #71717a;
+    }
+
+    * { box-sizing: border-box; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
+    body {
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start; 
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .app-card {
+        width: 100%;
+        max-width: 500px; 
+        padding: 20px;
+        margin-top: auto;
+        margin-bottom: auto;
+    }
+
+    /* Brand Header */
+    .brand-header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+
+    .logo-clean {
+        width: 70px;
+        height: 70px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .logo-clean img {
+        width: 200%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .brand-header h1 {
+        font-size: clamp(1.1rem, 5vw, 1.4rem); 
+        font-weight: 800;
+        margin: 0;
+        letter-spacing: -0.05em;
+        color: var(--primary);
+    }
+
+    /* Responsive Navigation Grid */
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 25px;
+    }
+
+    .nav-btn {
+        border: 1px solid var(--border);
+        background: #fafafa;
+        padding: 14px 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border-radius: 14px;
+        cursor: pointer;
+        color: var(--text-sub);
+        -webkit-tap-highlight-color: transparent; 
+    }
+
+    
+    @media (max-width: 360px) {
+        .nav-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .nav-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Drop Zone */
+    .upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 24px;
+        padding: 40px 20px;
+        text-align: center;
+        cursor: pointer;
+        background: #ffffff;
+    }
+
+    .upload-area:hover {
+        border-color: var(--pelco-blue);
+        background: #fcfdfe;
+    }
+
+    .upload-area h2 { font-size: 1rem; margin: 0 0 6px; font-weight: 700; }
+    .upload-area p { font-size: 0.8rem; color: var(--text-sub); margin: 0; }
+
+    .file-list {
+        margin-top: 20px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: center;
+        max-height: 150px; 
+        overflow-y: auto;
+    }
+
+    .file-tag {
+        background: #f4f4f5;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Action Button */
+    .btn-exec {
+        width: 100%;
+        margin-top: 25px;
+        padding: 16px;
+        background: var(--pelco-green);
+        color: white;
+        border: none;
+        border-radius: 16px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 8px 20px -4px rgba(3, 125, 60, 0.2);
+    }
+
+    .btn-exec:active {
+        transform: scale(0.98);
+    }
+
+    .btn-exec:disabled {
+        background: #e4e4e7;
+        color: #a1a1aa;
+        box-shadow: none;
+        cursor: not-allowed;
+    }
+
+    #status-bar {
+        margin-top: 20px;
+        text-align: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        min-height: 1.2em;
+    }
+</style>
+</head>
+<body>
+
+<div class="app-card">
+    <div class="brand-header">
+        <div class="logo-clean">
+            <img src="" alt="">
+        </div>
+        <h1>JRDZ<span> PDF Studio</span></h1>
+    </div>
+
+    <div class="nav-grid">
+        <button class="nav-btn active" onclick="setTab('pdf-to-png', this)">PDF to PNG</button>
+        <button class="nav-btn" onclick="setTab('png-to-pdf', this)">PNG to PDF</button>
+        <button class="nav-btn" onclick="setTab('merge', this)">Merge PDF</button>
+        <button class="nav-btn" onclick="setTab('split', this)">Split PDF</button>
+    </div>
+
+    <div class="upload-area" id="drop-zone" onclick="document.getElementById('file-input').click()">
+        <h2 id="tool-title">PDF to PNG</h2>
+        <p>Click to upload or drag & drop</p>
+        <input type="file" id="file-input" multiple style="display:none">
+    </div>
+
+    <div class="file-list" id="file-list"></div>
+
+    <button class="btn-exec" id="exec-btn" disabled>Process & Download</button>
+
+    <div id="status-bar"></div>
+</div>
+
+<script>
+    const { PDFDocument } = PDFLib;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    let mode = 'pdf-to-png';
+    const input = document.getElementById('file-input');
+    const list = document.getElementById('file-list');
+    const btn = document.getElementById('exec-btn');
+    const status = document.getElementById('status-bar');
+
+    function setTab(m, el) {
+        mode = m;
+        document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('tool-title').innerText = el.innerText;
+        reset();
+    }
+
+    function reset() {
+        input.value = '';
+        list.innerHTML = '';
+        btn.disabled = true;
+        status.innerText = '';
+    }
+
+    const zone = document.getElementById('drop-zone');
+    zone.ondragover = (e) => { e.preventDefault(); zone.style.borderColor = "var(--pelco-blue)"; };
+    zone.ondragleave = () => { zone.style.borderColor = "var(--border)"; };
+    zone.ondrop = (e) => {
+        e.preventDefault();
+        zone.style.borderColor = "var(--border)";
+        input.files = e.dataTransfer.files;
+        updateFileList();
+    };
+
+    input.onchange = updateFileList;
+
+    function updateFileList() {
+        const files = Array.from(input.files);
+        if (files.length) {
+            btn.disabled = false;
+            list.innerHTML = files.map(f => `<div class="file-tag">${f.name}</div>`).join('');
+        }
+    }
+
+    btn.onclick = async () => {
+        const files = Array.from(input.files);
+        status.innerText = "Running Logic...";
+        status.className = "status-active";
+        btn.disabled = true;
+
+        try {
+            if (mode === 'pdf-to-png') await handlePdfToPng(files);
+            if (mode === 'png-to-pdf') await handlePngToPdf(files);
+            if (mode === 'merge') await handleMerge(files);
+            if (mode === 'split') await handleSplit(files);
+            
+            status.innerText = "Success";
+            status.className = "status-done";
+        } catch (e) {
+            status.innerText = "Error: " + e.message;
+            status.style.color = 'var(--pelco-red)';
+        }
+        btn.disabled = false;
+    };
+
+    async function handlePdfToPng(files) {
+        for (const file of files) {
+            const base = file.name.replace(/\.[^/.]+$/, "");
+            const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale: 2.0 });
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.height = viewport.height; canvas.width = viewport.width;
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                download(canvas.toDataURL("image/png"), `${base}_p${i}.png`);
+            }
+        }
+    }
+
+    async function handlePngToPdf(files) {
+        for (const file of files) {
+            const pdfDoc = await PDFDocument.create();
+            const imgBytes = await file.arrayBuffer();
+            let img = file.type.includes("png") ? await pdfDoc.embedPng(imgBytes) : await pdfDoc.embedJpg(imgBytes);
+            const page = pdfDoc.addPage([img.width, img.height]);
+            page.drawImage(img, { x: 0, y: 0, width: img.width, height: img.height });
+            download(URL.createObjectURL(new Blob([await pdfDoc.save()])), file.name.split('.')[0] + ".pdf");
+        }
+    }
+
+    async function handleMerge(files) {
+        const doc = await PDFDocument.create();
+        for (const file of files) {
+            const pdf = await PDFDocument.load(await file.arrayBuffer());
+            const pages = await doc.copyPages(pdf, pdf.getPageIndices());
+            pages.forEach(p => doc.addPage(p));
+        }
+        download(URL.createObjectURL(new Blob([await doc.save()])), "Merged.pdf");
+    }
+
+    async function handleSplit(files) {
+        for (const file of files) {
+            const base = file.name.replace(/\.[^/.]+$/, "");
+            const pdf = await PDFDocument.load(await file.arrayBuffer());
+            for (let i = 0; i < pdf.getPageCount(); i++) {
+                const sub = await PDFDocument.create();
+                const [p] = await sub.copyPages(pdf, [i]);
+                sub.addPage(p);
+                download(URL.createObjectURL(new Blob([await sub.save()])), `${base}_part${i+1}.pdf`);
+            }
+        }
+    }
+
+    function download(url, name) {
+        const a = document.createElement('a');
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click();
+        document.body.removeChild(a);
+    }
+</script>
+
+</body>
+</html>

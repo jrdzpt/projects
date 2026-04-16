@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>JRDZ Toolkit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f8f6;--bg2:#f0f0ee;--bg3:#e4e4e2;
+  --border:#ddddd8;--border2:#b8b8b2;
+  --text:#0f0f0e;--text2:#5a5a55;--text3:#9a9a92;
+  --accent:#0f0f0e;--accent-fg:#f8f8f6;
+  --card:#ffffff;
+  --mono:'Geist Mono',monospace;
+  --sans:'Geist',sans-serif;
+  --nav:60px;--r:6px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.04);
+}
+[data-theme=dark]{
+  --bg:#0f0f0e;--bg2:#181817;--bg3:#222220;
+  --border:#2a2a28;--border2:#4a4a48;
+  --text:#f0f0ee;--text2:#909088;--text3:#505050;
+  --accent:#f0f0ee;--accent-fg:#0f0f0e;
+  --card:#181817;
+  --sh:0 1px 3px rgba(0,0,0,.4);
+  --sh-md:0 4px 16px rgba(0,0,0,.55);
+}
+html,body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+
+/* ═══════════════════════════════════════
+   LOADER
+═══════════════════════════════════════ */
+#loader{
+  position:fixed;inset:0;background:#0f0f0e;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;transition:opacity .6s ease,visibility .6s;
+}
+#loader.hide{opacity:0;visibility:hidden}
+.loader-logo{
+  font-family:var(--mono);font-size:clamp(48px,12vw,96px);font-weight:600;
+  color:#f0f0ee;letter-spacing:.18em;text-transform:uppercase;
+  animation:logoIn .7s cubic-bezier(.22,.68,0,1.2) both;
+}
+.loader-sub{
+  font-family:var(--mono);font-size:11px;color:#505050;
+  letter-spacing:.22em;text-transform:uppercase;margin-top:14px;
+  animation:logoIn .7s .15s cubic-bezier(.22,.68,0,1.2) both;
+}
+.loader-bar{
+  width:60px;height:2px;background:#2a2a28;border-radius:1px;
+  margin-top:40px;overflow:hidden;
+  animation:logoIn .7s .25s ease both;
+}
+.loader-bar-fill{
+  height:100%;background:#f0f0ee;border-radius:1px;width:0;
+  animation:barFill 1.6s .4s cubic-bezier(.4,0,.2,1) forwards;
+}
+.loader-dots{
+  display:flex;gap:6px;margin-top:20px;
+  animation:logoIn .7s .3s ease both;
+}
+.loader-dot{
+  width:4px;height:4px;border-radius:50%;background:#3a3a38;
+  animation:dotPulse 1.4s .4s ease-in-out infinite;
+}
+.loader-dot:nth-child(2){animation-delay:.55s}
+.loader-dot:nth-child(3){animation-delay:.7s}
+@keyframes logoIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes barFill{to{width:100%}}
+@keyframes dotPulse{0%,100%{background:#3a3a38}50%{background:#f0f0ee}}
+
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+nav{
+  position:fixed;top:0;left:0;right:0;height:var(--nav);
+  background:var(--bg);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;z-index:200;padding:0 16px;
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.nav-logo{
+  font-family:var(--mono);font-size:13px;font-weight:600;
+  color:var(--text);letter-spacing:.14em;text-transform:uppercase;
+  padding-right:14px;margin-right:10px;
+  border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0;
+}
+.nav-scroll{
+  display:flex;align-items:center;gap:2px;overflow-x:auto;
+  flex:1;scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.nav-scroll::-webkit-scrollbar{display:none}
+.ntab{
+  font-family:var(--mono);font-size:11px;font-weight:400;
+  color:var(--text3);padding:6px 11px;border-radius:4px;
+  cursor:pointer;white-space:nowrap;transition:all .14s;
+  border:none;background:none;letter-spacing:.04em;flex-shrink:0;
+}
+.ntab:hover{color:var(--text2);background:var(--bg2)}
+.ntab.active{color:var(--accent-fg);background:var(--accent)}
+.nav-end{display:flex;gap:4px;margin-left:10px;padding-left:10px;border-left:1px solid var(--border);flex-shrink:0}
+.icon-btn{
+  width:32px;height:32px;border:none;background:none;
+  color:var(--text2);cursor:pointer;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .14s;font-size:15px;
+}
+.icon-btn:hover{background:var(--bg2);color:var(--text)}
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+main{padding-top:calc(var(--nav) + 28px);padding-bottom:72px;min-height:100vh}
+.tool{display:none;max-width:520px;margin:0 auto;padding:0 20px}
+.tool.active{display:block;animation:rise .25s cubic-bezier(.22,.68,0,1.2)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* TOOL HEADER */
+.th{margin-bottom:24px}
+.th-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.th-num{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.12em;margin-bottom:5px}
+.th-title{font-size:26px;font-weight:300;color:var(--text);letter-spacing:-.03em;line-height:1.05}
+.th-desc{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.55;font-weight:300}
+.th-badge{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:20px;background:var(--bg3);color:var(--text2);white-space:nowrap;margin-top:4px;flex-shrink:0}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
+.card-title{
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  color:var(--text3);letter-spacing:.1em;text-transform:uppercase;
+  margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;
+}
+
+/* FORM */
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+label,.lbl{display:block;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+input[type=text],input[type=number],input[type=date],input[type=password],textarea,select{
+  width:100%;height:46px;padding:0 14px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);font-family:var(--mono);font-size:14px;
+  color:var(--text);outline:none;transition:all .14s;
+  -webkit-appearance:none;appearance:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--border2);background:var(--bg);
+  box-shadow:0 0 0 3px rgba(0,0,0,.05);
+}
+[data-theme=dark] input:focus,[data-theme=dark] select:focus{box-shadow:0 0 0 3px rgba(255,255,255,.05)}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23909090'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;
+  padding-right:34px;cursor:pointer;
+}
+textarea{height:80px;padding:12px 14px;resize:none;line-height:1.5}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+
+/* RANGE */
+input[type=range]{
+  width:100%;-webkit-appearance:none;height:3px;
+  background:var(--bg3);border-radius:2px;outline:none;
+  cursor:pointer;border:none;padding:0;margin:4px 0;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:20px;height:20px;
+  border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:var(--sh-md);
+}
+input[type=range]::-moz-range-thumb{
+  width:20px;height:20px;border-radius:50%;
+  background:var(--accent);border:none;cursor:pointer;
+}
+.range-labels{display:flex;justify-content:space-between;margin-top:4px}
+.range-labels span{font-family:var(--mono);font-size:10px;color:var(--text3)}
+
+/* BUTTONS */
+.btn{
+  width:100%;height:48px;background:var(--accent);color:var(--accent-fg);
+  border:none;border-radius:var(--r);font-family:var(--mono);font-size:11px;
+  letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .14s;
+  font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn:hover{opacity:.86;transform:translateY(-1px)}
+.btn:active{transform:none;opacity:.72}
+.btn-ghost{background:none;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg2);border-color:var(--border2)}
+.btn-sm{height:38px;font-size:10px;padding:0 16px;width:auto;border-radius:4px}
+.btn-xs{height:30px;font-size:10px;padding:0 12px;width:auto;border-radius:4px;display:inline-flex;align-items:center;justify-content:center}
+.btn-row{display:flex;gap:8px;margin-top:4px}
+.btn-row .btn{flex:1}
+
+/* RESULT CARD */
+.result-card{
+  background:var(--accent);color:var(--accent-fg);
+  border-radius:var(--r);padding:24px;margin-top:12px;display:none;
+}
+.result-card.show{display:block;animation:rise .22s ease}
+.res-big{font-family:var(--mono);font-size:44px;font-weight:300;letter-spacing:-.04em;line-height:1}
+.res-unit{font-family:var(--mono);font-size:12px;opacity:.45;margin-top:5px;letter-spacing:.06em}
+.res-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1px;
+  background:rgba(255,255,255,.12);margin-top:20px;border-radius:4px;overflow:hidden;
+}
+[data-theme=dark] .res-grid{background:rgba(0,0,0,.25)}
+.res-cell{background:var(--accent);padding:14px 16px}
+.res-cell-label{font-family:var(--mono);font-size:9px;opacity:.45;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.res-cell-val{font-family:var(--mono);font-size:15px;font-weight:400}
+
+/* OPT TOGGLES */
+.opt-grid{display:flex;flex-wrap:wrap;gap:7px}
+.opt{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  font-family:var(--mono);font-size:11px;color:var(--text2);
+  padding:8px 12px;border:1px solid var(--border);border-radius:4px;
+  transition:all .14s;user-select:none;
+}
+.opt:has(input:checked){border-color:var(--accent);color:var(--text);background:var(--bg2)}
+.opt input{display:none}
+.opt-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:background .14s;flex-shrink:0}
+.opt:has(input:checked) .opt-dot{background:var(--accent)}
+
+/* MISC */
+hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:20px;background:var(--bg2);color:var(--text2);border:1px solid var(--border)}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(60px);
+  background:var(--accent);color:var(--accent-fg);
+  font-family:var(--mono);font-size:11px;letter-spacing:.06em;
+  padding:10px 22px;border-radius:20px;z-index:9000;
+  transition:transform .3s cubic-bezier(.22,.68,0,1.2),opacity .3s;
+  opacity:0;pointer-events:none;white-space:nowrap;box-shadow:var(--sh-md);
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ═══════════════════════════════════════
+   BMI
+═══════════════════════════════════════ */
+.bmi-scale{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:10px 0 0}
+.bmi-seg{border-radius:2px}
+.bmi-needle-wrap{position:relative;height:14px;margin-top:2px}
+/* needle uses accent-fg so it's visible on the accent (inverted) background */
+.bmi-needle{
+  position:absolute;width:2px;height:12px;
+  background:var(--accent-fg);border-radius:1px;top:0;
+  transform:translateX(-50%);transition:left .7s cubic-bezier(.22,.68,0,1.2);
+}
+
+/* ═══════════════════════════════════════
+   AGE
+═══════════════════════════════════════ */
+.age-countdown{
+  text-align:center;padding:22px 20px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r);margin-top:12px;
+}
+.countdown-big{font-family:var(--mono);font-size:52px;font-weight:300;color:var(--text);letter-spacing:-.04em;line-height:1}
+.countdown-lbl{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.12em;text-transform:uppercase;margin-top:4px}
+.atl{display:flex;flex-direction:column;gap:2px;margin-top:10px}
+.atl-row{
+  display:flex;align-items:center;gap:12px;
+  padding:11px 14px;background:var(--card);
+  border:1px solid var(--border);border-radius:4px;
+}
+.atl-ico{font-size:14px;width:22px;text-align:center;flex-shrink:0;opacity:.8}
+.atl-lbl{font-family:var(--mono);font-size:11px;color:var(--text2);flex:1}
+.atl-val{font-family:var(--mono);font-size:13px;color:var(--text);font-weight:500}
+
+/* ═══════════════════════════════════════
+   CONVERTER
+═══════════════════════════════════════ */
+.swap-btn{
+  width:36px;height:36px;background:var(--bg2);border:1px solid var(--border);
+  border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:15px;transition:all .14s;color:var(--text2);margin:8px auto;
+}
+.swap-btn:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.hist-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  border-radius:4px;cursor:pointer;transition:background .14s;
+}
+.hist-item:hover{background:var(--bg2)}
+.hist-eq{font-family:var(--mono);font-size:12px;color:var(--text2);flex:1}
+
+/* ═══════════════════════════════════════
+   TIP
+═══════════════════════════════════════ */
+.preset-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tip-preset{
+  font-family:var(--mono);font-size:11px;padding:6px 14px;
+  border:1px solid var(--border);border-radius:20px;
+  background:none;cursor:pointer;color:var(--text2);transition:all .14s;
+}
+.tip-preset:hover{border-color:var(--border2);color:var(--text)}
+.tip-preset.active{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.split-avs{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.split-av{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--bg3);border:1.5px solid var(--border);
+  font-family:var(--mono);font-size:10px;
+  display:flex;align-items:center;justify-content:center;color:var(--text2);
+}
+.split-av.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+/* ═══════════════════════════════════════
+   PASSWORD
+═══════════════════════════════════════ */
+#pwd-box{
+  font-family:var(--mono);font-size:15px;color:var(--text);
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:16px;word-break:break-all;line-height:1.65;min-height:64px;
+  letter-spacing:.04em;margin:4px 0 8px;cursor:pointer;transition:border-color .14s;
+}
+#pwd-box:hover{border-color:var(--border2)}
+.str-bar{display:flex;gap:3px;margin-bottom:8px}
+.sb{flex:1;height:3px;border-radius:2px;background:var(--bg3);transition:background .3s}
+.str-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.pwd-hist-item{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:4px;
+  margin-bottom:5px;cursor:pointer;transition:all .14s;
+}
+.pwd-hist-item:hover{border-color:var(--border2)}
+.pwd-hist-txt{font-family:var(--mono);font-size:11px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pwd-hist-time{font-family:var(--mono);font-size:10px;color:var(--text3);flex-shrink:0}
+
+/* ═══════════════════════════════════════
+   TODO
+═══════════════════════════════════════ */
+.todo-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tstat{text-align:center;padding:14px 8px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--sh)}
+.tstat-n{font-family:var(--mono);font-size:26px;font-weight:300;color:var(--text)}
+.tstat-l{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:.09em;text-transform:uppercase;margin-top:3px}
+.tab-row{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.tab-pill{
+  font-family:var(--mono);font-size:10px;padding:5px 12px;
+  border:1px solid var(--border);border-radius:20px;
+  background:none;cursor:pointer;color:var(--text2);transition:all .14s;
+}
+.tab-pill:hover{border-color:var(--border2);color:var(--text)}
+.tab-pill.active{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+#todo-list{display:flex;flex-direction:column;gap:3px}
+.ti{
+  display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r);
+  transition:all .14s;animation:rise .2s ease;
+}
+.ti:hover{border-color:var(--border2)}
+.ti.done{opacity:.5}
+.ti.done .ti-txt{text-decoration:line-through}
+.ti-chk{
+  width:20px;height:20px;border-radius:50%;border:1.5px solid var(--border2);
+  cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  transition:all .14s;
+}
+.ti.done .ti-chk{background:var(--accent);border-color:var(--accent)}
+.ti.done .ti-chk::after{
+  content:'';width:6px;height:4px;display:block;
+  border-left:1.5px solid var(--accent-fg);
+  border-bottom:1.5px solid var(--accent-fg);
+  transform:rotate(-45deg) translateY(-1px);
+}
+.ti-txt{flex:1;font-size:14px;color:var(--text)}
+.ti-meta{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.ti-pri{font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:.06em;padding:2px 6px;border-radius:20px;flex-shrink:0}
+.pri-high{background:#fef2f2;color:#991b1b}
+.pri-med{background:#fefce8;color:#854d0e}
+.pri-low{background:#f0fdf4;color:#166534}
+[data-theme=dark] .pri-high{background:#2d1111;color:#fca5a5}
+[data-theme=dark] .pri-med{background:#252000;color:#fde68a}
+[data-theme=dark] .pri-low{background:#0d2010;color:#86efac}
+.ti-date{font-family:var(--mono);font-size:10px;color:var(--text3)}
+.ti-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:17px;line-height:1;padding:2px 4px;border-radius:3px;transition:all .14s}
+.ti-del:hover{color:var(--text);background:var(--bg2)}
+.empty{text-align:center;padding:40px 20px;color:var(--text3);font-family:var(--mono);font-size:12px;line-height:2}
+.empty-ico{font-size:28px;opacity:.3;display:block;margin-bottom:8px}
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media(max-width:480px){
+  .tool{padding:0 14px}
+  .th-title{font-size:22px}
+  .res-big{font-size:34px}
+  .g2{grid-template-columns:1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .nav-logo{font-size:11px;padding-right:10px}
+  .ntab{padding:5px 8px;font-size:10px}
+  .countdown-big{font-size:40px}
+}
+@media(max-width:340px){
+  .g3{grid-template-columns:1fr}
+  .ntab{padding:5px 7px;font-size:9px;letter-spacing:.02em}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════ LOADER ════════════════════════ -->
+<div id="loader">
+  <div class="loader-logo">JRDZ</div>
+  <div class="loader-sub">Personal Toolkit</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════ NAV ════════════════════════ -->
+<nav>
+  <span class="nav-logo">JRDZ</span>
+  <div class="nav-scroll">
+    <button class="ntab active" onclick="show(0)">BMI</button>
+    <button class="ntab" onclick="show(1)">Age</button>
+    <button class="ntab" onclick="show(2)">Convert</button>
+    <button class="ntab" onclick="show(3)">Tip</button>
+    <button class="ntab" onclick="show(4)">Password</button>
+    <button class="ntab" onclick="show(5)">To-Do</button>
+  </div>
+  <div class="nav-end">
+    <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">◑</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<main>
+
+<!-- ══════════════════════ 01  BMI ══════════════════════ -->
+<section class="tool active" id="t0">
+  <div class="th">
+    <div class="th-top">
+      <div>
+        <div class="th-num">01 / 06</div>
+        <h1 class="th-title">BMI Calculator</h1>
+      </div>
+      <span class="th-badge">Health</span>
+    </div>
+    <p class="th-desc">Body Mass Index based on height &amp; weight. Updates as you type.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Unit system</div>
+    <div class="opt-grid" style="margin-bottom:16px">
+      <label class="opt"><input type="radio" name="bmi-sys" value="metric" checked onchange="updateBmiLabels()"><span class="opt-dot"></span>Metric (kg / cm)</label>
+      <label class="opt"><input type="radio" name="bmi-sys" value="imperial" onchange="updateBmiLabels()"><span class="opt-dot"></span>Imperial (lbs / ft)</label>
+    </div>
+    <div class="field" id="bmi-metric-h">
+      <label id="bh-lbl">Height (cm)</label>
+      <input type="number" id="bmi-h" placeholder="175" min="1" max="300" oninput="liveCalcBmi()">
+    </div>
+    <div class="g2" id="bmi-imperial-h" style="display:none">
+      <div class="field">
+        <label>Feet</label>
+        <input type="number" id="bmi-ft" placeholder="5" min="1" max="9" oninput="liveCalcBmi()">
+      </div>
+      <div class="field">
+        <label>Inches</label>
+        <input type="number" id="bmi-in" placeholder="9" min="0" max="11" oninput="liveCalcBmi()">
+      </div>
+    </div>
+    <div class="field">
+      <label id="bw-lbl">Weight (kg)</label>
+      <input type="number" id="bmi-w" placeholder="70" min="1" max="500" oninput="liveCalcBmi()">
+    </div>
+    <div class="g2">
+      <div class="field">
+        <label>Age (optional)</label>
+        <input type="number" id="bmi-age" placeholder="25" min="5" max="120" oninput="liveCalcBmi()">
+      </div>
+      <div class="field">
+        <label>Sex (optional)</label>
+        <select id="bmi-sex" onchange="liveCalcBmi()">
+          <option value="">—</option>
+          <option value="m">Male</option>
+          <option value="f">Female</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="bmi-res">
+    <div class="res-big" id="bmi-num">—</div>
+    <div class="res-unit">BMI · <span id="bmi-cat-txt">—</span></div>
+    <div style="margin-top:18px">
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;opacity:.4;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px">
+        <span>Under</span><span>Normal</span><span>Over</span><span>Obese</span>
+      </div>
+      <div class="bmi-scale">
+        <div class="bmi-seg" style="flex:1.85;background:rgba(255,255,255,.28)"></div>
+        <div class="bmi-seg" style="flex:1.3;background:rgba(255,255,255,.55)"></div>
+        <div class="bmi-seg" style="flex:.7;background:rgba(255,255,255,.75)"></div>
+        <div class="bmi-seg" style="flex:2;background:rgba(255,255,255,.92)"></div>
+      </div>
+      <div class="bmi-needle-wrap">
+        <div class="bmi-needle" id="bmi-needle" style="left:5%"></div>
+      </div>
+    </div>
+    <div class="res-grid" style="margin-top:16px">
+      <div class="res-cell"><div class="res-cell-label">Category</div><div class="res-cell-val" id="bmi-g-cat">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Healthy BMI</div><div class="res-cell-val">18.5 – 24.9</div></div>
+      <div class="res-cell"><div class="res-cell-label">Ideal weight</div><div class="res-cell-val" id="bmi-g-ideal">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Status</div><div class="res-cell-val" id="bmi-g-diff">—</div></div>
+    </div>
+  </div>
+  <div id="bmi-note" style="display:none;font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:10px;line-height:1.8">
+    * BMI is a screening tool only and does not directly measure body fat.
+  </div>
+</section>
+
+<!-- ══════════════════════ 02  AGE ══════════════════════ -->
+<section class="tool" id="t1">
+  <div class="th">
+    <div class="th-top">
+      <div>
+        <div class="th-num">02 / 06</div>
+        <h1 class="th-title">Age Calculator</h1>
+      </div>
+      <span class="th-badge">Dates</span>
+    </div>
+    <p class="th-desc">Exact age, next birthday countdown, zodiac &amp; life milestones.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Dates</div>
+    <div class="g2">
+      <div class="field">
+        <label>Date of birth</label>
+        <input type="date" id="age-dob" onchange="calcAge()">
+      </div>
+      <div class="field">
+        <label>As of</label>
+        <input type="date" id="age-to" onchange="calcAge()">
+      </div>
+    </div>
+  </div>
+
+  <div class="result-card" id="age-res">
+    <div class="res-big" id="age-yrs">—</div>
+    <div class="res-unit">years old</div>
+    <div class="res-grid">
+      <div class="res-cell"><div class="res-cell-label">+Months</div><div class="res-cell-val" id="age-mo">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">+Days</div><div class="res-cell-val" id="age-d">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Total days</div><div class="res-cell-val" id="age-td">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Total weeks</div><div class="res-cell-val" id="age-tw">—</div></div>
+    </div>
+  </div>
+
+  <div id="age-extra" style="display:none">
+    <div class="age-countdown">
+      <div class="countdown-lbl">Next birthday in</div>
+      <div class="countdown-big" id="age-bd-cnt">—</div>
+      <div class="countdown-lbl" style="margin-top:3px" id="age-bd-lbl">days</div>
+    </div>
+    <div class="atl">
+      <div class="atl-row"><span class="atl-ico">📅</span><span class="atl-lbl">Born on</span><span class="atl-val" id="atl-day">—</span></div>
+      <div class="atl-row"><span class="atl-ico">♈</span><span class="atl-lbl">Zodiac sign</span><span class="atl-val" id="atl-zodiac">—</span></div>
+      <div class="atl-row"><span class="atl-ico">🌍</span><span class="atl-lbl">Total hours lived</span><span class="atl-val" id="atl-hrs">—</span></div>
+      <div class="atl-row"><span class="atl-ico">💓</span><span class="atl-lbl">Est. heartbeats</span><span class="atl-val" id="atl-hb">—</span></div>
+      <div class="atl-row"><span class="atl-ico">😴</span><span class="atl-lbl">Est. days slept</span><span class="atl-val" id="atl-sleep">—</span></div>
+      <div class="atl-row"><span class="atl-ico">🎂</span><span class="atl-lbl">Birthdays celebrated</span><span class="atl-val" id="atl-bdays">—</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 03  CONVERTER ══════════════════════ -->
+<section class="tool" id="t2">
+  <div class="th">
+    <div class="th-top">
+      <div>
+        <div class="th-num">03 / 06</div>
+        <h1 class="th-title">Unit Converter</h1>
+      </div>
+      <span class="th-badge">Convert</span>
+    </div>
+    <p class="th-desc">10 categories — length, weight, temp, speed, volume, area, data, energy, pressure, time.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Category</div>
+    <div class="opt-grid">
+      <label class="opt"><input type="radio" name="ccat" value="length" checked onchange="loadUnits()"><span class="opt-dot"></span>Length</label>
+      <label class="opt"><input type="radio" name="ccat" value="weight" onchange="loadUnits()"><span class="opt-dot"></span>Weight</label>
+      <label class="opt"><input type="radio" name="ccat" value="temp"   onchange="loadUnits()"><span class="opt-dot"></span>Temp</label>
+      <label class="opt"><input type="radio" name="ccat" value="speed"  onchange="loadUnits()"><span class="opt-dot"></span>Speed</label>
+      <label class="opt"><input type="radio" name="ccat" value="volume" onchange="loadUnits()"><span class="opt-dot"></span>Volume</label>
+      <label class="opt"><input type="radio" name="ccat" value="area"   onchange="loadUnits()"><span class="opt-dot"></span>Area</label>
+      <label class="opt"><input type="radio" name="ccat" value="data"   onchange="loadUnits()"><span class="opt-dot"></span>Data</label>
+      <label class="opt"><input type="radio" name="ccat" value="energy" onchange="loadUnits()"><span class="opt-dot"></span>Energy</label>
+      <label class="opt"><input type="radio" name="ccat" value="pressure" onchange="loadUnits()"><span class="opt-dot"></span>Pressure</label>
+      <label class="opt"><input type="radio" name="ccat" value="time"   onchange="loadUnits()"><span class="opt-dot"></span>Time</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Convert</div>
+    <div class="field">
+      <label>Value</label>
+      <input type="number" id="conv-val" placeholder="Enter a value…" oninput="doConv()">
+    </div>
+    <div class="g2">
+      <div class="field">
+        <label>From</label>
+        <select id="conv-from" onchange="doConv()"></select>
+      </div>
+      <div class="field">
+        <label>To</label>
+        <select id="conv-to" onchange="doConv()"></select>
+      </div>
+    </div>
+    <button class="swap-btn" onclick="swapUnits()" title="Swap">⇅</button>
+  </div>
+
+  <div class="result-card show" id="conv-res">
+    <div class="res-big" id="conv-out">—</div>
+    <div class="res-unit" id="conv-lbl">—</div>
+  </div>
+
+  <div class="card" id="conv-hist-card" style="display:none">
+    <div class="card-title">
+      <span>Recent conversions</span>
+      <button class="btn-xs btn-ghost" onclick="clearConvHist()">Clear</button>
+    </div>
+    <div id="conv-hist-list"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 04  TIP ══════════════════════ -->
+<section class="tool" id="t3">
+  <div class="th">
+    <div class="th-top">
+      <div>
+        <div class="th-num">04 / 06</div>
+        <h1 class="th-title">Tip Calculator</h1>
+      </div>
+      <span class="th-badge">Finance</span>
+    </div>
+    <p class="th-desc">Split bills and calculate tips across any group size.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Bill</div>
+    <div class="g2">
+      <div class="field">
+        <label>Currency</label>
+        <select id="tip-cur" onchange="calcTip()">
+          <option value="$">USD — $</option>
+          <option value="€">EUR — €</option>
+          <option value="£">GBP — £</option>
+          <option value="¥">JPY — ¥</option>
+          <option value="₱">PHP — ₱</option>
+          <option value="₩">KRW — ₩</option>
+          <option value="A$">AUD — A$</option>
+          <option value="C$">CAD — C$</option>
+          <option value="Fr">CHF — Fr</option>
+          <option value="₹">INR — ₹</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Bill amount</label>
+        <input type="number" id="tip-bill" placeholder="0.00" min="0" oninput="calcTip()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Tip percentage</div>
+    <div class="preset-row">
+      <button class="tip-preset" onclick="setTip(10)">10%</button>
+      <button class="tip-preset" onclick="setTip(15)">15%</button>
+      <button class="tip-preset active" onclick="setTip(18)">18%</button>
+      <button class="tip-preset" onclick="setTip(20)">20%</button>
+      <button class="tip-preset" onclick="setTip(25)">25%</button>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Custom — <span id="tip-pct-lbl">18%</span></label>
+      <input type="range" id="tip-pct" min="0" max="50" value="18" oninput="onTipSlide()">
+      <div class="range-labels"><span>0%</span><span>25%</span><span>50%</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Split</div>
+    <div class="field" style="margin-bottom:8px">
+      <label>Number of people</label>
+      <input type="number" id="tip-people" value="1" min="1" max="30" oninput="calcTip()">
+    </div>
+    <div class="split-avs" id="split-avs"></div>
+  </div>
+
+  <div class="result-card show" id="tip-res">
+    <div class="res-big" id="tip-pp">—</div>
+    <div class="res-unit">per person</div>
+    <div class="res-grid">
+      <div class="res-cell"><div class="res-cell-label">Bill</div><div class="res-cell-val" id="tip-g-bill">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Tip</div><div class="res-cell-val" id="tip-g-tip">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Total</div><div class="res-cell-val" id="tip-g-total">—</div></div>
+      <div class="res-cell"><div class="res-cell-label">Each pays</div><div class="res-cell-val" id="tip-g-pp">—</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 05  PASSWORD ══════════════════════ -->
+<section class="tool" id="t4">
+  <div class="th">
+    <div class="th-top">
+      <div>
+        <div class="th-num">05 / 06</div>
+        <h1 class="th-title">Password Generator</h1>
+      </div>
+      <span class="th-badge">Security</span>
+    </div>
+    <p class="th-desc">Cryptographically secure. Three modes with strength analysis.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Mode</div>
+    <div class="opt-grid">
+      <label class="opt"><input type="radio" name="pwd-mode" value="random" checked onchange="genPwd()"><span class="opt-dot"></span>Random</label>
+      <label class="opt"><input type="radio" name="pwd-mode" value="phrase" onchange="genPwd()"><span class="opt-dot"></span>Passphrase</label>
+      <label class="opt"><input type="radio" name="pwd-mode" value="pin"    onchange="genPwd()"><span class="opt-dot"></span>PIN</label>
+    </div>
+  </div>
+
+  <!-- Random options -->
+  <div id="opts-random" class="card">
+    <div class="card-title">Options</div>
+    <div class="field">
+      <label>Length — <span id="pwd-len-lbl">16</span> characters</label>
+      <input type="range" id="pwd-len" min="4" max="128" value="16" oninput="updatePwdLen()">
+      <div class="range-labels"><span>4</span><span>64</span><span>128</span></div>
+    </div>
+    <hr>
+    <div class="opt-grid">
+      <label class="opt"><input type="checkbox" id="pU" checked onchange="genPwd()"><span class="opt-dot"></span>A–Z uppercase</label>
+      <label class="opt"><input type="checkbox" id="pL" checked onchange="genPwd()"><span class="opt-dot"></span>a–z lowercase</label>
+      <label class="opt"><input type="checkbox" id="pN" checked onchange="genPwd()"><span class="opt-dot"></span>0–9 numbers</label>
+      <label class="opt"><input type="checkbox" id="pS" onchange="genPwd()"><span class="opt-dot"></span>!@#$ symbols</label>
+      <label class="opt"><input type="checkbox" id="pE" onchange="genPwd()"><span class="opt-dot"></span>~`^ extended</label>
+      <label class="opt"><input type="checkbox" id="pNoAmb" onchange="genPwd()"><span class="opt-dot"></span>No ambiguous (0O1l)</label>
+    </div>
+  </div>
+
+  <!-- Passphrase options -->
+  <div id="opts-phrase" class="card" style="display:none">
+    <div class="card-title">Passphrase options</div>
+    <div class="field">
+      <label>Words — <span id="pwd-wc-lbl">4</span></label>
+      <input type="range" id="pwd-wc" min="2" max="8" value="4" oninput="document.getElementById('pwd-wc-lbl').textContent=this.value;genPwd()">
+      <div class="range-labels"><span>2</span><span>5</span><span>8</span></div>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Separator</label>
+      <select id="pwd-sep" onchange="genPwd()">
+        <option value="-">Hyphen  –</option>
+        <option value=".">Dot  .</option>
+        <option value="_">Underscore  _</option>
+        <option value=" ">Space</option>
+        <option value="">None</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- PIN options -->
+  <div id="opts-pin" class="card" style="display:none">
+    <div class="card-title">PIN options</div>
+    <div class="field" style="margin-bottom:0">
+      <label>Digits — <span id="pwd-pin-lbl">6</span></label>
+      <input type="range" id="pwd-pin-len" min="4" max="12" value="6" oninput="document.getElementById('pwd-pin-lbl').textContent=this.value;genPwd()">
+      <div class="range-labels"><span>4</span><span>8</span><span>12</span></div>
+    </div>
+  </div>
+
+  <div id="pwd-box" title="Click to copy" onclick="copyPwd()">—</div>
+
+  <div class="str-bar">
+    <div class="sb" id="sb1"></div>
+    <div class="sb" id="sb2"></div>
+    <div class="sb" id="sb3"></div>
+    <div class="sb" id="sb4"></div>
+  </div>
+  <div class="str-row">
+    <span style="font-family:var(--mono);font-size:11px;color:var(--text2)">Strength: <b id="str-lbl" style="font-weight:500">—</b></span>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--text3)" id="str-entropy">—</span>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-ghost" onclick="genPwd()">↻ Regenerate</button>
+    <button class="btn" onclick="copyPwd()">⎘ Copy</button>
+  </div>
+
+  <div style="margin-top:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase">History</span>
+      <button class="btn-xs btn-ghost" onclick="clearPwdHist()">Clear</button>
+    </div>
+    <div id="pwd-hist"></div>
+  </div>
+</section>
+
+<!-- ══════════════════════ 06  TODO ══════════════════════ -->
+<section class="tool" id="t5">
+  <div class="th">
+    <div class="th-top">
+      <div>
+        <div class="th-num">06 / 06</div>
+        <h1 class="th-title">To-Do List</h1>
+      </div>
+      <span class="th-badge">Productivity</span>
+    </div>
+    <p class="th-desc">Tasks with priority, due dates. Saves automatically.</p>
+  </div>
+
+  <div class="todo-stats">
+    <div class="tstat"><div class="tstat-n" id="ts-open">0</div><div class="tstat-l">Open</div></div>
+    <div class="tstat"><div class="tstat-n" id="ts-done">0</div><div class="tstat-l">Done</div></div>
+    <div class="tstat"><div class="tstat-n" id="ts-total">0</div><div class="tstat-l">Total</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Add task</div>
+    <div class="field">
+      <label>Task</label>
+      <input type="text" id="ti-input" placeholder="What needs to be done?" onkeydown="if(event.key==='Enter')addTodo()">
+    </div>
+    <div class="g3">
+      <div class="field" style="margin-bottom:0">
+        <label>Priority</label>
+        <select id="ti-pri">
+          <option value="med">Medium</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Due date</label>
+        <input type="date" id="ti-due" style="font-size:11px;padding:0 8px">
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-sm" style="width:100%" onclick="addTodo()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-row">
+    <button class="tab-pill active" id="fp-all"  onclick="filterTodos('all')">All</button>
+    <button class="tab-pill" id="fp-open" onclick="filterTodos('open')">Open</button>
+    <button class="tab-pill" id="fp-done" onclick="filterTodos('done')">Done</button>
+    <button class="tab-pill" id="fp-high" onclick="filterTodos('high')">🔴 High</button>
+    <button class="tab-pill btn-ghost" style="margin-left:auto" onclick="clearDone()">Clear done</button>
+  </div>
+
+  <div id="todo-list"></div>
+</section>
+
+</main>
+
+<script>
+// ═══════════════════════════════════════════════
+//  LOADER — dismiss after 2.2s
+// ═══════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('loader').classList.add('hide');
+  },2200);
+});
+
+// ═══════════════════════════════════════════════
+//  GLOBALS
+// ═══════════════════════════════════════════════
+function show(i){
+  document.querySelectorAll('.tool').forEach((t,j)=>t.classList.toggle('active',j===i));
+  document.querySelectorAll('.ntab').forEach((t,j)=>t.classList.toggle('active',j===i));
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+function toggleTheme(){
+  const d=document.documentElement;
+  const dark=d.dataset.theme==='dark';
+  d.dataset.theme=dark?'light':'dark';
+  document.getElementById('theme-btn').textContent=dark?'◑':'●';
+  localStorage.setItem('jrdz-theme',d.dataset.theme);
+}
+(()=>{
+  const t=localStorage.getItem('jrdz-theme');
+  if(t){document.documentElement.dataset.theme=t;document.getElementById('theme-btn').textContent=t==='dark'?'●':'◑';}
+})();
+
+// ═══════════════════════════════════════════════
+//  01  BMI
+// ═══════════════════════════════════════════════
+function updateBmiLabels(){
+  const imp=document.querySelector('input[name="bmi-sys"]:checked').value==='imperial';
+  document.getElementById('bmi-metric-h').style.display=imp?'none':'block';
+  document.getElementById('bmi-imperial-h').style.display=imp?'grid':'none';
+  document.getElementById('bw-lbl').textContent=imp?'Weight (lbs)':'Weight (kg)';
+  document.getElementById('bmi-w').placeholder=imp?'154':'70';
+  liveCalcBmi();
+}
+function liveCalcBmi(){
+  const imp=document.querySelector('input[name="bmi-sys"]:checked').value==='imperial';
+  let wKg=parseFloat(document.getElementById('bmi-w').value);
+  let hCm;
+  if(imp){
+    const ft=parseFloat(document.getElementById('bmi-ft').value)||0;
+    const ins=parseFloat(document.getElementById('bmi-in').value)||0;
+    wKg=wKg*0.453592;
+    hCm=(ft*12+ins)*2.54;
+  } else {
+    hCm=parseFloat(document.getElementById('bmi-h').value);
+  }
+  if(!wKg||!hCm||wKg<=0||hCm<=0)return;
+  const bmi=Math.round((wKg/((hCm/100)**2))*10)/10;
+  let cat,pct;
+  if(bmi<18.5){cat='Underweight';pct=Math.min((bmi/18.5)*27,26);}
+  else if(bmi<25){cat='Normal weight';pct=27+((bmi-18.5)/6.5)*27;}
+  else if(bmi<30){cat='Overweight';pct=54+((bmi-25)/5)*18;}
+  else{cat='Obese';pct=Math.min(72+((bmi-30)/15)*27,98);}
+  const hm=hCm/100;
+  const idLow=Math.round(18.5*hm*hm);
+  const idHigh=Math.round(24.9*hm*hm);
+  const fmt=imp?v=>Math.round(v*2.20462)+' lbs':v=>v+' kg';
+  const midIdeal=(idLow+idHigh)/2;
+  const diff=Math.abs(wKg-midIdeal);
+  const status=bmi>=18.5&&bmi<25?'At ideal weight':bmi<18.5?fmt(diff)+' under ideal':fmt(diff)+' over ideal';
+  document.getElementById('bmi-num').textContent=bmi;
+  document.getElementById('bmi-cat-txt').textContent=cat;
+  document.getElementById('bmi-needle').style.left=pct+'%';
+  document.getElementById('bmi-g-cat').textContent=cat;
+  document.getElementById('bmi-g-ideal').textContent=fmt(idLow)+' – '+fmt(idHigh);
+  document.getElementById('bmi-g-diff').textContent=status;
+  document.getElementById('bmi-res').classList.add('show');
+  document.getElementById('bmi-note').style.display='block';
+}
+
+// ═══════════════════════════════════════════════
+//  02  AGE
+// ═══════════════════════════════════════════════
+document.getElementById('age-to').value=new Date().toISOString().slice(0,10);
+const ZODIAC=[[1,20,'Aquarius'],[2,19,'Pisces'],[3,21,'Aries'],[4,20,'Taurus'],[5,21,'Gemini'],[6,21,'Cancer'],[7,23,'Leo'],[8,23,'Virgo'],[9,23,'Libra'],[10,23,'Scorpio'],[11,22,'Sagittarius'],[12,22,'Capricorn']];
+function getZodiac(m,d){for(const[cm,cd,name]of ZODIAC)if(m===cm&&d<cd)return name;const next=ZODIAC.find(([cm])=>cm===m%12+1);return next?next[2]:'Capricorn';}
+function calcAge(){
+  const dob=new Date(document.getElementById('age-dob').value);
+  const to=new Date(document.getElementById('age-to').value);
+  if(isNaN(dob)||isNaN(to)||dob>=to)return;
+  let y=to.getFullYear()-dob.getFullYear();
+  let m=to.getMonth()-dob.getMonth();
+  let d=to.getDate()-dob.getDate();
+  if(d<0){m--;d+=new Date(to.getFullYear(),to.getMonth(),0).getDate();}
+  if(m<0){y--;m+=12;}
+  const td=Math.floor((to-dob)/864e5);
+  document.getElementById('age-yrs').textContent=y;
+  document.getElementById('age-mo').textContent=m;
+  document.getElementById('age-d').textContent=d;
+  document.getElementById('age-td').textContent=td.toLocaleString();
+  document.getElementById('age-tw').textContent=Math.floor(td/7).toLocaleString();
+  document.getElementById('age-res').classList.add('show');
+  // next birthday
+  let next=new Date(to.getFullYear(),dob.getMonth(),dob.getDate());
+  if(next<=to)next.setFullYear(to.getFullYear()+1);
+  const dLeft=Math.ceil((next-to)/864e5);
+  document.getElementById('age-bd-cnt').textContent=dLeft===0?'🎉':dLeft;
+  document.getElementById('age-bd-lbl').textContent=dLeft===0?'Today!':'days';
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  document.getElementById('atl-day').textContent=DAYS[dob.getDay()]+', '+dob.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('atl-zodiac').textContent=getZodiac(dob.getMonth()+1,dob.getDate());
+  document.getElementById('atl-hrs').textContent=(td*24).toLocaleString();
+  document.getElementById('atl-hb').textContent=Math.round(td*24*60*70).toLocaleString();
+  document.getElementById('atl-sleep').textContent=Math.round(td/3).toLocaleString();
+  document.getElementById('atl-bdays').textContent=y;
+  document.getElementById('age-extra').style.display='block';
+}
+
+// ═══════════════════════════════════════════════
+//  03  CONVERTER
+// ═══════════════════════════════════════════════
+const UCAT={
+  length: {m:'Meter',km:'Kilometer',mi:'Mile',ft:'Foot',in:'Inch',cm:'Centimeter',mm:'Millimeter',yd:'Yard',nm:'Nautical mile',ly:'Light-year'},
+  weight: {kg:'Kilogram',g:'Gram',lb:'Pound',oz:'Ounce',t:'Metric ton',st:'Stone',mg:'Milligram',mcg:'Microgram'},
+  temp:   {C:'Celsius',F:'Fahrenheit',K:'Kelvin',R:'Rankine'},
+  speed:  {'km/h':'km/h',mph:'mph','m/s':'m/s',knot:'Knot','ft/s':'ft/s',Mach:'Mach'},
+  volume: {L:'Liter',mL:'Milliliter','m³':'m³','ft³':'ft³',gal:'US Gallon',qt:'US Quart',pt:'US Pint',cup:'Cup',floz:'fl oz',tbsp:'Tablespoon',tsp:'Teaspoon'},
+  area:   {'m²':'m²','km²':'km²','ft²':'ft²','in²':'in²',ha:'Hectare',acre:'Acre','mi²':'mi²','cm²':'cm²'},
+  data:   {bit:'Bit',B:'Byte',KB:'Kilobyte',MB:'Megabyte',GB:'Gigabyte',TB:'Terabyte',PB:'Petabyte',Kib:'Kibibyte',Mib:'Mebibyte',Gib:'Gibibyte'},
+  energy: {J:'Joule',kJ:'Kilojoule',cal:'Calorie',kcal:'Kilocalorie',Wh:'Watt-hour',kWh:'Kilowatt-hour',BTU:'BTU',eV:'Electronvolt'},
+  pressure:{Pa:'Pascal',kPa:'Kilopascal',MPa:'Megapascal',bar:'Bar',mbar:'Millibar',psi:'PSI',atm:'Atmosphere',mmHg:'mmHg',inHg:'inHg'},
+  time:   {ms:'Millisecond',s:'Second',min:'Minute',h:'Hour',d:'Day',wk:'Week',mo:'Month',yr:'Year',decade:'Decade',century:'Century'}
+};
+const BASE={
+  m:1,km:1000,mi:1609.344,ft:0.3048,in:0.0254,cm:0.01,mm:0.001,yd:0.9144,nm:1852,ly:9.461e15,
+  kg:1,g:0.001,lb:0.453592,oz:0.0283495,t:1000,st:6.35029,mg:1e-6,mcg:1e-9,
+  'km/h':1,mph:1.60934,'m/s':3.6,knot:1.852,'ft/s':1.09728,Mach:1234.8,
+  L:1,mL:0.001,'m³':1000,'ft³':28.3168,gal:3.78541,qt:0.946353,pt:0.473176,cup:0.24,floz:0.0295735,tbsp:0.0147868,tsp:0.00492892,
+  'm²':1,'km²':1e6,'ft²':0.092903,'in²':6.4516e-4,ha:1e4,acre:4046.86,'mi²':2589988,'cm²':0.0001,
+  bit:1,B:8,KB:8000,MB:8e6,GB:8e9,TB:8e12,PB:8e15,Kib:8192,Mib:8388608,Gib:8589934592,
+  J:1,kJ:1000,cal:4.184,kcal:4184,Wh:3600,kWh:3600000,BTU:1055.06,eV:1.602e-19,
+  Pa:1,kPa:1000,MPa:1e6,bar:1e5,mbar:100,psi:6894.76,atm:101325,mmHg:133.322,inHg:3386.39,
+  ms:0.001,s:1,min:60,h:3600,d:86400,wk:604800,mo:2629800,yr:31557600,decade:315576000,century:3155760000
+};
+let convHist=[];
+function loadUnits(){
+  const cat=document.querySelector('input[name="ccat"]:checked').value;
+  const keys=Object.keys(UCAT[cat]);
+  ['conv-from','conv-to'].forEach((id,i)=>{
+    const sel=document.getElementById(id);
+    sel.innerHTML=keys.map((k,j)=>`<option value="${k}"${j===(i===0?0:1)?' selected':''}>${UCAT[cat][k]}</option>`).join('');
+  });
+  doConv();
+}
+function doConv(){
+  const cat=document.querySelector('input[name="ccat"]:checked').value;
+  const from=document.getElementById('conv-from').value;
+  const to=document.getElementById('conv-to').value;
+  const val=parseFloat(document.getElementById('conv-val').value);
+  if(isNaN(val)){document.getElementById('conv-out').textContent='—';return;}
+  let res;
+  if(cat==='temp'){
+    let c;
+    if(from==='C')c=val;
+    else if(from==='F')c=(val-32)*5/9;
+    else if(from==='K')c=val-273.15;
+    else c=(val-491.67)*5/9; // Rankine
+    if(to==='C')res=c;
+    else if(to==='F')res=c*9/5+32;
+    else if(to==='K')res=c+273.15;
+    else res=(c+273.15)*9/5; // to Rankine
+  } else {
+    res=(val*BASE[from])/BASE[to];
+  }
+  const abs=Math.abs(res);
+  const fmt=abs===0?'0':abs>=0.0001&&abs<1e13?(+res.toPrecision(8)).toLocaleString(undefined,{maximumFractionDigits:8}):res.toExponential(4);
+  document.getElementById('conv-out').textContent=fmt;
+  document.getElementById('conv-lbl').textContent=`${UCAT[cat][from]} → ${UCAT[cat][to]}`;
+  // history
+  const eq=`${val} ${from} = ${fmt} ${to}`;
+  convHist=convHist.filter(h=>h!==eq).slice(0,6);
+  convHist.unshift(eq);
+  renderConvHist();
+}
+function swapUnits(){
+  const f=document.getElementById('conv-from');
+  const t=document.getElementById('conv-to');
+  [f.value,t.value]=[t.value,f.value];
+  doConv();
+}
+function renderConvHist(){
+  const card=document.getElementById('conv-hist-card');
+  if(!convHist.length){card.style.display='none';return;}
+  card.style.display='block';
+  document.getElementById('conv-hist-list').innerHTML=convHist.map(h=>
+    `<div class="hist-item" onclick="useConvHist('${h.replace(/'/g,"\\'")}')">
+       <span class="hist-eq">${h}</span>
+     </div>`
+  ).join('');
+}
+function useConvHist(eq){
+  // eq format: "VAL FROM = RESULT TO"
+  const m=eq.match(/^([\d.e+\-]+)\s+(\S+)\s+=\s+/);
+  if(!m)return;
+  const fromUnit=m[2];
+  const val=m[1];
+  // find category that contains fromUnit
+  for(const cat of Object.keys(UCAT)){
+    if(fromUnit in UCAT[cat]){
+      document.querySelector(`input[name="ccat"][value="${cat}"]`).checked=true;
+      loadUnits();
+      document.getElementById('conv-from').value=fromUnit;
+      document.getElementById('conv-val').value=val;
+      doConv();
+      return;
+    }
+  }
+}
+function clearConvHist(){convHist=[];renderConvHist();}
+loadUnits();
+
+// ═══════════════════════════════════════════════
+//  04  TIP
+// ═══════════════════════════════════════════════
+function setTip(v){
+  document.getElementById('tip-pct').value=v;
+  document.getElementById('tip-pct-lbl').textContent=v+'%';
+  document.querySelectorAll('.tip-preset').forEach(b=>b.classList.toggle('active',parseInt(b.textContent)===v));
+  calcTip();
+}
+function onTipSlide(){
+  const v=document.getElementById('tip-pct').value;
+  document.getElementById('tip-pct-lbl').textContent=v+'%';
+  document.querySelectorAll('.tip-preset').forEach(b=>b.classList.remove('active'));
+  calcTip();
+}
+function buildAvatars(n){
+  const el=document.getElementById('split-avs');
+  el.innerHTML=Array.from({length:Math.min(n,20)},(_,i)=>`<div class="split-av on">${i+1}</div>`).join('');
+}
+function calcTip(){
+  const bill=parseFloat(document.getElementById('tip-bill').value)||0;
+  const pct=parseInt(document.getElementById('tip-pct').value)||0;
+  const n=Math.max(1,parseInt(document.getElementById('tip-people').value)||1);
+  const cur=document.getElementById('tip-cur').value;
+  const tip=bill*pct/100;const total=bill+tip;const pp=total/n;
+  const f=v=>cur+(Number.isInteger(v)?v:v.toFixed(2));
+  document.getElementById('tip-pp').textContent=f(pp);
+  document.getElementById('tip-g-bill').textContent=f(bill);
+  document.getElementById('tip-g-tip').textContent=f(tip);
+  document.getElementById('tip-g-total').textContent=f(total);
+  document.getElementById('tip-g-pp').textContent=f(pp);
+  buildAvatars(n);
+}
+calcTip();
+
+// ═══════════════════════════════════════════════
+//  05  PASSWORD
+// ═══════════════════════════════════════════════
+const WORDS=['apple','brave','cloud','delta','eagle','flame','grace','haven','ivory','jungle','karma','lemon','mango','noble','ocean','pearl','queen','river','storm','tiger','ultra','vivid','winds','xenon','yacht','zebra','amber','blaze','crisp','daisy','elder','frost','globe','haste','image','joker','kneel','lunar','magic','nerve','orbit','prism','quest','radar','salvo','tempo','union','vapor','waltz','xerox','yield','alpha','sigma','delta','kappa','oxide','prism','nexus','pixel','solar','hydra','cubic'];
+let pwdHist=[];
+function updatePwdLen(){
+  document.getElementById('pwd-len-lbl').textContent=document.getElementById('pwd-len').value;
+  genPwd();
+}
+function genPwd(){
+  const mode=document.querySelector('input[name="pwd-mode"]:checked').value;
+  document.getElementById('opts-random').style.display=mode==='random'?'block':'none';
+  document.getElementById('opts-phrase').style.display=mode==='phrase'?'block':'none';
+  document.getElementById('opts-pin').style.display=mode==='pin'?'block':'none';
+  let pwd='';
+  if(mode==='pin'){
+    const l=parseInt(document.getElementById('pwd-pin-len').value)||6;
+    const a=new Uint8Array(l);crypto.getRandomValues(a);
+    pwd=Array.from(a).map(b=>b%10).join('');
+  } else if(mode==='phrase'){
+    const wc=parseInt(document.getElementById('pwd-wc').value)||4;
+    const sep=document.getElementById('pwd-sep').value;
+    const a=new Uint8Array(wc);crypto.getRandomValues(a);
+    pwd=Array.from(a).map(b=>WORDS[b%WORDS.length]).join(sep);
+  } else {
+    const len=parseInt(document.getElementById('pwd-len').value)||16;
+    const noAmb=document.getElementById('pNoAmb').checked;
+    const amb='0O1lI';
+    let sets=[];
+    if(document.getElementById('pU').checked) sets.push('ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+    if(document.getElementById('pL').checked) sets.push('abcdefghijklmnopqrstuvwxyz');
+    if(document.getElementById('pN').checked) sets.push('0123456789');
+    if(document.getElementById('pS').checked) sets.push('!@#$%^&*()-_=+[]{}|;:,.<>?');
+    if(document.getElementById('pE').checked) sets.push('~`^/\\');
+    if(!sets.length) sets=['abcdefghijklmnopqrstuvwxyz'];
+    let pool=sets.join('');
+    if(noAmb) pool=pool.split('').filter(c=>!amb.includes(c)).join('');
+    if(!pool) pool='abcdefghijklmnopqrstuvwxyz';
+    const buf=new Uint8Array(len*3);crypto.getRandomValues(buf);
+    const max=256-(256%pool.length);
+    pwd=Array.from(buf).filter(b=>b<max).slice(0,len).map(b=>pool[b%pool.length]).join('');
+    // top-up if filtered too aggressively
+    while(pwd.length<len){
+      const top=new Uint8Array(8);crypto.getRandomValues(top);
+      pwd+=Array.from(top).map(b=>pool[b%pool.length]).join('');
+    }
+    pwd=pwd.slice(0,len);
+  }
+  document.getElementById('pwd-box').textContent=pwd;
+  calcStrength(pwd);
+  pwdHist=[{pwd,time:new Date().toLocaleTimeString()},...pwdHist.filter(p=>p.pwd!==pwd)].slice(0,5);
+  renderPwdHist();
+}
+function calcStrength(pwd){
+  const entropy=pwd.length>0?Math.log2(Math.max([...new Set(pwd)].length,2))*pwd.length:0;
+  const lvl=entropy<30?0:entropy<55?1:entropy<80?2:3;
+  const cols=['#ef4444','#f59e0b','#22c55e','#10b981'];
+  const lbls=['Weak','Fair','Strong','Very Strong'];
+  [1,2,3,4].forEach(i=>document.getElementById('sb'+i).style.background=i-1<=lvl?cols[lvl]:'var(--bg3)');
+  document.getElementById('str-lbl').textContent=lbls[lvl];
+  document.getElementById('str-entropy').textContent=Math.round(entropy)+' bits';
+}
+function copyPwd(){
+  const t=document.getElementById('pwd-box').textContent;
+  if(!t||t==='—')return;
+  navigator.clipboard.writeText(t).then(()=>toast('Password copied!'));
+}
+function renderPwdHist(){
+  const el=document.getElementById('pwd-hist');
+  el.innerHTML=pwdHist.length
+    ?pwdHist.map(p=>`<div class="pwd-hist-item" onclick="usePwdHist(this,'${p.pwd.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')">
+        <span class="pwd-hist-txt">${p.pwd}</span>
+        <span class="pwd-hist-time">${p.time}</span>
+      </div>`).join('')
+    :'<div class="empty" style="padding:12px 0">No history yet</div>';
+}
+function usePwdHist(_,p){
+  document.getElementById('pwd-box').textContent=p;
+  calcStrength(p);
+  navigator.clipboard.writeText(p).then(()=>toast('Copied from history'));
+}
+function clearPwdHist(){pwdHist=[];renderPwdHist();}
+genPwd();
+
+// ═══════════════════════════════════════════════
+//  06  TO-DO
+// ═══════════════════════════════════════════════
+let todos=JSON.parse(localStorage.getItem('jrdz-todos')||'[]');
+let todoFilter='all';
+function saveTodos(){localStorage.setItem('jrdz-todos',JSON.stringify(todos));}
+function addTodo(){
+  const inp=document.getElementById('ti-input');
+  const txt=inp.value.trim();if(!txt)return;
+  todos.unshift({
+    id:Date.now(),text:txt,done:false,
+    pri:document.getElementById('ti-pri').value,
+    due:document.getElementById('ti-due').value||''
+  });
+  inp.value='';
+  saveTodos();renderTodos();toast('Task added');
+}
+function toggleTodo(id){
+  todos=todos.map(t=>t.id===id?{...t,done:!t.done}:t);
+  saveTodos();renderTodos();
+}
+function deleteTodo(id){
+  todos=todos.filter(t=>t.id!==id);
+  saveTodos();renderTodos();
+}
+function clearDone(){
+  const n=todos.filter(t=>t.done).length;
+  todos=todos.filter(t=>!t.done);
+  saveTodos();renderTodos();
+  if(n)toast(n+' task'+(n>1?'s':'')+' cleared');
+}
+function filterTodos(f){
+  todoFilter=f;
+  ['all','open','done','high'].forEach(x=>{
+    const el=document.getElementById('fp-'+x);
+    if(el)el.classList.toggle('active',x===f);
+  });
+  renderTodos();
+}
+function renderTodos(){
+  const open=todos.filter(t=>!t.done).length;
+  document.getElementById('ts-open').textContent=open;
+  document.getElementById('ts-done').textContent=todos.length-open;
+  document.getElementById('ts-total').textContent=todos.length;
+  let vis=todoFilter==='open'?todos.filter(t=>!t.done):
+          todoFilter==='done'?todos.filter(t=>t.done):
+          todoFilter==='high'?todos.filter(t=>t.pri==='high'):todos;
+  const list=document.getElementById('todo-list');
+  if(!vis.length){
+    list.innerHTML=`<div class="empty"><span class="empty-ico">○</span>${todoFilter==='all'?'No tasks yet — add one above':'Nothing here'}</div>`;
+    return;
+  }
+  const priLabel={high:'HIGH',med:'MED',low:'LOW'};
+  const priCls={high:'pri-high',med:'pri-med',low:'pri-low'};
+  list.innerHTML=vis.map(t=>{
+    const dueStr=t.due?`<span class="ti-date">${new Date(t.due+'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short'})}</span>`:'';
+    return `<div class="ti${t.done?' done':''}">
+      <div class="ti-chk" onclick="toggleTodo(${t.id})"></div>
+      <span class="ti-txt">${t.text.replace(/</g,'&lt;')}</span>
+      <div class="ti-meta">
+        ${dueStr}
+        <span class="ti-pri ${priCls[t.pri]||'pri-med'}">${priLabel[t.pri]||'MED'}</span>
+        <button class="ti-del" onclick="deleteTodo(${t.id})">×</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+renderTodos();
+</script>
+</body>
+</html>

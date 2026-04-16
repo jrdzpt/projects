@@ -1,0 +1,2 @@
+Main Systemh : http://127.0.0.1/RF_System/index.php
+DB Setup (run once) http://127.0.0.1/RF_System/setup.php

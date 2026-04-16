@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=1, viewport-fit=cover">
+<title>JRDZ — Internship Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600&family=Geist:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f8f6;--bg2:#f0f0ee;--bg3:#e4e4e2;
+  --border:#ddddd8;--border2:#b8b8b2;
+  --text:#0f0f0e;--text2:#5a5a55;--text3:#9a9a92;
+  --accent:#0f0f0e;--accent-fg:#f8f8f6;
+  --card:#ffffff;
+  --mono:'Geist Mono',monospace;
+  --sans:'Geist',sans-serif;
+  --nav:60px;--r:6px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --sh-md:0 4px 16px rgba(0,0,0,.09),0 2px 4px rgba(0,0,0,.04);
+}
+[data-theme=dark]{
+  --bg:#0f0f0e;--bg2:#181817;--bg3:#222220;
+  --border:#2a2a28;--border2:#4a4a48;
+  --text:#f0f0ee;--text2:#909088;--text3:#505050;
+  --accent:#f0f0ee;--accent-fg:#0f0f0e;
+  --card:#181817;
+  --sh:0 1px 3px rgba(0,0,0,.4);
+  --sh-md:0 4px 16px rgba(0,0,0,.55);
+}
+html,body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:15px;-webkit-font-smoothing:antialiased;transition:background .25s,color .25s}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;background:#0f0f0e;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity .6s ease,visibility .6s}
+#loader.hide{opacity:0;visibility:hidden}
+.loader-logo{font-family:var(--mono);font-size:clamp(48px,12vw,96px);font-weight:600;color:#f0f0ee;letter-spacing:.18em;text-transform:uppercase;animation:logoIn .7s cubic-bezier(.22,.68,0,1.2) both}
+.loader-sub{font-family:var(--mono);font-size:11px;color:#505050;letter-spacing:.22em;text-transform:uppercase;margin-top:14px;animation:logoIn .7s .15s cubic-bezier(.22,.68,0,1.2) both}
+.loader-bar{width:60px;height:2px;background:#2a2a28;border-radius:1px;margin-top:40px;overflow:hidden;animation:logoIn .7s .25s ease both}
+.loader-bar-fill{height:100%;background:#f0f0ee;border-radius:1px;width:0;animation:barFill 1.6s .4s cubic-bezier(.4,0,.2,1) forwards}
+.loader-dots{display:flex;gap:6px;margin-top:20px;animation:logoIn .7s .3s ease both}
+.loader-dot{width:4px;height:4px;border-radius:50%;background:#3a3a38;animation:dotPulse 1.4s .4s ease-in-out infinite}
+.loader-dot:nth-child(2){animation-delay:.55s}
+.loader-dot:nth-child(3){animation-delay:.7s}
+@keyframes logoIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes barFill{to{width:100%}}
+@keyframes dotPulse{0%,100%{background:#3a3a38}50%{background:#f0f0ee}}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav);background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;z-index:200;padding:0 20px;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+.nav-logo{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--text);letter-spacing:.14em;text-transform:uppercase;padding-right:14px;margin-right:12px;border-right:1px solid var(--border);white-space:nowrap;flex-shrink:0}
+.nav-mid{flex:1;font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.06em}
+.nav-end{display:flex;gap:4px;flex-shrink:0}
+.icon-btn{width:32px;height:32px;border:none;background:none;color:var(--text2);cursor:pointer;border-radius:4px;display:flex;align-items:center;justify-content:center;transition:all .14s;font-size:15px}
+.icon-btn:hover{background:var(--bg2);color:var(--text)}
+
+/* ── LAYOUT ── */
+main{padding-top:calc(var(--nav)+28px);padding-bottom:60px;min-height:100vh;max-width:1100px;margin:0 auto;padding-left:20px;padding-right:20px}
+.grid-main{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+@media(max-width:860px){.grid-main{grid-template-columns:1fr}}
+
+/* ── TOOL HEADER ── */
+.th{margin-bottom:20px}
+.th-num{font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.12em;margin-bottom:5px}
+.th-title{font-size:26px;font-weight:300;color:var(--text);letter-spacing:-.03em;line-height:1.05}
+.th-desc{font-size:13px;color:var(--text2);margin-top:8px;line-height:1.55;font-weight:300}
+
+/* ── CARDS ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;margin-bottom:12px;box-shadow:var(--sh)}
+.card-title{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+
+/* ── FORM ── */
+.field{margin-bottom:16px}
+.field:last-child{margin-bottom:0}
+label{display:block;font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px}
+input[type=text],input[type=number],input[type=date],textarea,select{width:100%;height:46px;padding:0 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:14px;color:var(--text);outline:none;transition:all .14s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--border2);background:var(--bg);box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+[data-theme=dark] input:focus,[data-theme=dark] select:focus,[data-theme=dark] textarea:focus{box-shadow:0 0 0 3px rgba(255,255,255,.05)}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23909090'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:34px;cursor:pointer}
+textarea{height:80px;padding:12px 14px;resize:none;line-height:1.5}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ── RANGE ── */
+input[type=range]{width:100%;-webkit-appearance:none;height:3px;background:var(--bg3);border-radius:2px;outline:none;cursor:pointer;border:none;padding:0;margin:4px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:var(--sh-md)}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:var(--accent);border:none;cursor:pointer}
+.range-row{display:flex;align-items:center;gap:10px}
+.range-row input{flex:1}
+.range-badge{font-family:var(--mono);font-size:12px;font-weight:500;background:var(--accent);color:var(--accent-fg);padding:5px 12px;border-radius:4px;white-space:nowrap;min-width:46px;text-align:center}
+
+/* ── BUTTONS ── */
+.btn{width:100%;height:48px;background:var(--accent);color:var(--accent-fg);border:none;border-radius:var(--r);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .14s;font-weight:500;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:hover{opacity:.86;transform:translateY(-1px)}
+.btn:active{transform:none;opacity:.72}
+.btn-ghost{background:none;color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--bg2);border-color:var(--border2)}
+.btn-sm{height:36px;font-size:10px;padding:0 14px;width:auto;border-radius:4px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-xs{height:28px;font-size:10px;padding:0 10px;width:auto;border-radius:4px;display:inline-flex;align-items:center;justify-content:center}
+.btn-row{display:flex;gap:8px;margin-top:4px}
+.btn-row .btn{flex:1}
+
+/* ── RESULT / PROGRESS CARD ── */
+.progress-card{background:var(--accent);color:var(--accent-fg);border-radius:var(--r);padding:24px;box-shadow:var(--sh-md)}
+.res-big{font-family:var(--mono);font-size:44px;font-weight:300;letter-spacing:-.04em;line-height:1}
+.res-unit{font-family:var(--mono);font-size:12px;opacity:.45;margin-top:4px;letter-spacing:.06em}
+.res-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,255,255,.12);margin-top:20px;border-radius:4px;overflow:hidden}
+[data-theme=dark] .res-grid{background:rgba(0,0,0,.25)}
+.res-cell{background:var(--accent);padding:14px 16px}
+.res-cell-label{font-family:var(--mono);font-size:9px;opacity:.45;letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.res-cell-val{font-family:var(--mono);font-size:15px;font-weight:400}
+
+/* ── PROGRESS BAR ── */
+.prog-wrap{margin:18px 0 6px}
+.prog-track{height:4px;background:rgba(255,255,255,.15);border-radius:2px;overflow:hidden;margin-bottom:6px}
+[data-theme=dark] .prog-track{background:rgba(0,0,0,.3)}
+.prog-fill{height:100%;background:var(--accent-fg);border-radius:2px;transition:width .8s cubic-bezier(.22,.68,0,1.2);width:0}
+.prog-labels{display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;opacity:.5}
+
+/* ── DAY SELECTOR PILLS ── */
+.day-pills{display:flex;gap:4px;justify-content:space-between}
+.day-pill{width:36px;height:36px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .14s;display:flex;align-items:center;justify-content:center;letter-spacing:.04em}
+.day-pill:hover{border-color:var(--border2);color:var(--text2)}
+.day-pill.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+
+/* ── CALENDAR ── */
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.cal-month{font-family:var(--mono);font-size:18px;font-weight:500;color:var(--text);letter-spacing:-.02em}
+.cal-nav{display:flex;gap:4px}
+.cal-nav-btn{width:34px;height:34px;border:1px solid var(--border);background:var(--bg2);border-radius:4px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:all .14s;font-size:13px}
+.cal-nav-btn:hover{background:var(--bg3);border-color:var(--border2)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--text3);text-align:center;padding:6px 0;letter-spacing:.08em;text-transform:uppercase}
+.cal-day{
+  aspect-ratio:1;border-radius:4px;border:1px solid transparent;
+  cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;transition:all .12s;position:relative;
+  font-family:var(--mono);font-size:12px;font-weight:500;color:var(--text2);
+  background:var(--bg2);
+}
+.cal-day:hover{border-color:var(--border2);background:var(--bg3)}
+.cal-day.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none}
+.cal-day.off{background:transparent;border-color:transparent;color:var(--text3);opacity:.4}
+.cal-day.off:hover{background:var(--bg2);opacity:.7;cursor:pointer}
+.cal-day.match-fade{opacity:.3;filter:grayscale(.55)}
+.cal-day.work{background:var(--bg2);border-color:var(--border);color:var(--text)}
+.cal-day.logged{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.cal-day.logged:hover{opacity:.88}
+.cal-day.today-ring{box-shadow:0 0 0 2px var(--accent);z-index:1}
+.cal-day.holiday{background:var(--bg3);color:var(--text3);border-style:dashed}
+.cal-day.past{opacity:.5}
+.cal-day .day-num{font-size:11px;font-weight:600;line-height:1}
+.cal-day .day-hrs{font-family:var(--mono);font-size:9px;opacity:.7;margin-top:2px;line-height:1}
+.cal-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.leg-item{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;color:var(--text3)}
+.leg-dot{width:12px;height:12px;border-radius:2px;flex-shrink:0}
+.month-chart{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:18px}
+.chart-bar{height:108px;background:var(--bg2);border-radius:12px;overflow:hidden;display:flex;flex-direction:column-reverse;justify-content:flex-start}
+.chart-fill{width:100%;background:var(--accent);transition:height .2s ease}
+.chart-day{font-family:var(--mono);font-size:10px;color:var(--text3);text-align:center;padding:6px 4px;background:rgba(255,255,255,.05)}
+
+/* ── DAY EDITOR ── */
+.day-editor{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-top:12px;animation:rise .2s ease}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.day-editor-title{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
+.hrs-stepper{display:flex;align-items:center;gap:0;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;background:var(--card)}
+.hrs-btn{width:44px;height:44px;border:none;background:var(--bg2);color:var(--text2);cursor:pointer;font-size:16px;transition:all .14s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.hrs-btn:hover{background:var(--bg3);color:var(--text)}
+.hrs-display{flex:1;text-align:center;font-family:var(--mono);font-size:20px;font-weight:400;color:var(--text);padding:0 12px}
+
+/* ── OPT TOGGLES ── */
+.opt-grid{display:flex;flex-wrap:wrap;gap:7px}
+.opt{display:flex;align-items:center;gap:8px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);padding:8px 12px;border:1px solid var(--border);border-radius:4px;transition:all .14s;user-select:none}
+.opt:has(input:checked){border-color:var(--accent);color:var(--text);background:var(--bg2)}
+.opt input{display:none}
+.opt-dot{width:6px;height:6px;border-radius:50%;background:var(--border2);transition:background .14s;flex-shrink:0}
+.opt:has(input:checked) .opt-dot{background:var(--accent)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--accent);color:var(--accent-fg);font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:10px 22px;border-radius:20px;z-index:9000;transition:transform .3s cubic-bezier(.22,.68,0,1.2),opacity .3s;opacity:0;pointer-events:none;white-space:nowrap;box-shadow:var(--sh-md)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* misc */
+hr{border:none;border-top:1px solid var(--border);margin:14px 0}
+
+/* ── RESPONSIVE ── */
+@media (max-width:1000px) {
+  html{font-size:14px}
+  main{padding-left:16px;padding-right:16px}
+  .grid-main{grid-template-columns:1fr}
+  .card{padding:16px}
+  .cal-header{flex-direction:column;align-items:flex-start;gap:10px}
+  .cal-nav{flex-wrap:wrap;gap:6px}
+  .cal-nav-btn{width:auto;padding:0 12px;min-width:40px}
+  .day-pills{flex-wrap:wrap;justify-content:flex-start}
+  .day-pill{flex:1 1 32%;min-width:64px}
+}
+@media (max-width:760px) {
+  nav{padding:0 16px}
+  .nav-logo{padding-right:10px;margin-right:10px}
+  .nav-mid{font-size:10px}
+  .cal-grid{overflow-x:auto}
+  .cal-grid > div{min-width:38px}
+  .opt-grid{flex-direction:column}
+  .btn-row{flex-direction:column}
+  .btn-row .btn{width:100%}
+  .range-row{flex-direction:column;align-items:flex-start}
+  .range-badge{margin-top:8px}
+  .card-title{flex-direction:column;align-items:flex-start;gap:10px}
+  .card-title button{margin-top:0;width:100%}
+  .field{margin-bottom:14px}
+  .btn-sm{width:100%}
+  .month-chart{display:flex;overflow-x:auto;padding-bottom:4px}
+  .month-chart .chart-bar{min-width:28px;flex:0 0 auto}
+}
+@media (max-width:600px) {
+  html{font-size:13px}
+  main{padding-left:12px;padding-right:12px}
+  .th-title{font-size:20px}
+  .th-desc{font-size:12px}
+  .res-big{font-size:28px}
+  .res-grid{grid-template-columns:1fr}
+  .g2{grid-template-columns:1fr}
+  .day-pill{width:28px;height:28px;font-size:8px}
+  .cal-day .day-num{font-size:10px}
+  .cal-day{font-size:10px}
+  .cal-nav-btn{font-size:12px;min-width:32px}
+  .opt{font-size:10px;padding:6px 10px}
+  .chart-day{font-size:9px;padding:4px 3px}
+  .day-editor{padding:14px}
+  .range-row{gap:8px}
+  .btn{height:40px;font-size:10px}
+  .progress-card{padding:18px}
+  .res-cell{padding:12px}
+  .card{border-radius:10px}
+  .cal-nav{justify-content:flex-start}
+  .card-title{flex-direction:column;align-items:flex-start;gap:8px}
+  .opt-grid{gap:6px}
+  .btn-row{gap:6px}
+}
+@media (max-width:480px) {
+  nav{padding:0 12px;height:52px}
+  .nav-logo{font-size:11px;padding-right:8px;margin-right:8px}
+  main{padding-top:calc(var(--nav)+20px);padding-bottom:50px}
+  .card{padding:14px}
+  .th-title{font-size:18px}
+  .th-desc{display:none}
+  .btn{height:38px;font-size:9px}
+  .btn-sm{font-size:9px;padding:0 10px}
+  .range-badge{font-size:11px;padding:4px 10px}
+  .cal-day{aspect-ratio:1;min-height:0}
+  .cal-grid{gap:2px}
+  .month-chart{gap:4px}
+  .chart-bar{height:78px}
+  .cal-nav-btn{width:32px;height:32px}
+  .day-pill{width:26px;height:26px;font-size:8px}
+  .progress-card{padding:16px}
+}
+
+@media (max-width:380px) {
+  .card-setup,
+  .card-settings,
+  .card-monthly,
+  .card-activity,
+  .progress-card {
+    display:none;
+  }
+  nav{padding:0 10px;height:50px}
+  .nav-logo{font-size:10px;padding-right:6px;margin-right:6px}
+  .btn{height:36px;font-size:9px}
+  .btn-sm{font-size:9px;padding:0 8px}
+  .range-badge{font-size:10px;padding:3px 8px}
+  .cal-nav-btn{width:30px;height:30px}
+  .month-chart{display:none}
+  .day-pill{width:24px;height:24px;font-size:8px}
+  .cal-grid{gap:1px}
+  .card{padding:12px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">JRDZ</div>
+  <div class="loader-sub">Internship Tracker</div>
+  <div class="loader-bar"><div class="loader-bar-fill"></div></div>
+  <div class="loader-dots">
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+    <div class="loader-dot"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">JRDZ</span>
+  <span class="nav-mid">Internship Tracker</span>
+  <div class="nav-end">
+    <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">◑</button>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<main>
+  <div class="th">
+    <div class="th-num">JRDZ Toolkit · Personal</div>
+    <h1 class="th-title">Internship Tracker</h1>
+    <p class="th-desc"><br> Track your hours, log daily work, and hit your target. All data stays on your device.</br/</p>
+  </div>
+
+  <div class="grid-main">
+
+    <!-- ── LEFT COLUMN ── -->
+    <div>
+
+      <!-- SETUP -->
+      <div class="card card-setup">
+        <div class="card-title">
+          <span>Setup</span>
+          <button class="btn-xs btn-ghost" onclick="resetAll()">Reset</button>
+        </div>
+
+        <div class="field">
+          <label>Target hours</label>
+          <input type="number" id="target-hrs" value="2000" min="1" oninput="save();recalc()">
+        </div>
+
+        <div class="field">
+          <label>Start date</label>
+          <input type="date" id="start-date" onchange="save();recalc()">
+        </div>
+
+        <div class="field">
+          <label>Hours per day — <span id="hpd-lbl">8h</span></label>
+          <div class="range-row">
+            <input type="range" id="hpd" min="1" max="12" value="8" oninput="document.getElementById('hpd-lbl').textContent=this.value+'h';save();recalc()">
+            <div class="range-badge" id="hpd-badge">8h</div>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px">Default hours per work day</div>
+        </div>
+
+        <div class="field">
+          <label>Workweek preset</label>
+          <div class="opt-grid">
+            <label class="opt"><input type="radio" name="work-preset" value="mon-fri" onchange="applyWorkweekPreset('mon-fri')"><span class="opt-dot"></span>Mon-Fri</label>
+            <label class="opt"><input type="radio" name="work-preset" value="tue-sat" onchange="applyWorkweekPreset('tue-sat')"><span class="opt-dot"></span>Tue-Sat</label>
+            <label class="opt"><input type="radio" name="work-preset" value="custom" onchange="applyWorkweekPreset('custom')"><span class="opt-dot"></span>Custom</label>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px">Pick a recurring weekly work schedule.</div>
+        </div>
+
+        <hr>
+
+        <div class="field">
+          <label>Work days</label>
+          <div class="day-pills" id="day-pills">
+            <button class="day-pill" data-d="0" onclick="toggleDay(0)">SUN</button>
+            <button class="day-pill on" data-d="1" onclick="toggleDay(1)">MON</button>
+            <button class="day-pill on" data-d="2" onclick="toggleDay(2)">TUE</button>
+            <button class="day-pill on" data-d="3" onclick="toggleDay(3)">WED</button>
+            <button class="day-pill on" data-d="4" onclick="toggleDay(4)">THU</button>
+            <button class="day-pill on" data-d="5" onclick="toggleDay(5)">FRI</button>
+            <button class="day-pill" data-d="6" onclick="toggleDay(6)">SAT</button>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="field">
+          <label>Exclude PH holidays 2026?</label>
+          <div class="opt-grid">
+            <label class="opt"><input type="radio" name="ph" value="yes" onchange="save();recalc()"><span class="opt-dot"></span>Yes — exclude</label>
+            <label class="opt"><input type="radio" name="ph" value="no" checked onchange="save();recalc()"><span class="opt-dot"></span>No — count all</label>
+          </div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:6px">18 PH holidays will not count as work days</div>
+        </div>
+      </div>
+
+      <!-- PROGRESS CARD -->
+      <div class="progress-card">
+        <div class="res-big" id="prog-hrs-done">0h</div>
+        <div class="res-unit">of <span id="prog-target">2000</span>h target</div>
+
+        <div class="prog-wrap">
+          <div class="prog-track"><div class="prog-fill" id="prog-bar" style="width:0%"></div></div>
+          <div class="prog-labels">
+            <span id="prog-pct">0%</span>
+            <span id="prog-days-lbl">0 days worked</span>
+          </div>
+        </div>
+
+        <div class="res-grid">
+          <div class="res-cell"><div class="res-cell-label">Remaining</div><div class="res-cell-val" id="prog-remaining">—</div></div>
+          <div class="res-cell"><div class="res-cell-label">Projected end</div><div class="res-cell-val" id="prog-proj-end">—</div></div>
+          <div class="res-cell"><div class="res-cell-label">Days worked</div><div class="res-cell-val" id="prog-days-worked">0</div></div>
+          <div class="res-cell"><div class="res-cell-label">Days remaining</div><div class="res-cell-val" id="prog-days-rem">—</div></div>
+        </div>
+        <div id="reminder-note" style="margin-top:14px;font-family:var(--mono);font-size:11px;color:var(--text3)"></div>
+
+        <div style="margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-ghost" onclick="exportCSV()" style="border-color:rgba(255,255,255,.2);color:var(--accent-fg)">↓ Export CSV</button>
+          <button class="btn btn-ghost" onclick="exportPDF()" style="border-color:rgba(255,255,255,.2);color:var(--accent-fg)">📄 Export PDF</button>
+        </div>
+      </div>
+
+      <div class="card card-settings">
+        <div class="card-title">Settings</div>
+        <div class="field">
+          <label>Theme</label>
+          <select id="theme-select" onchange="setTheme(this.value)">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Locale</label>
+          <select id="locale-select" onchange="save();renderCalendar()">
+            <option value="en-GB">English (UK)</option>
+            <option value="en-US">English (US)</option>
+            <option value="es-ES">Español</option>
+            <option value="fr-FR">Français</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>First day of week</label>
+          <div class="opt-grid">
+            <label class="opt"><input type="radio" name="first-day" value="sun" onchange="save();renderCalendar()"><span class="opt-dot"></span>Sunday</label>
+            <label class="opt"><input type="radio" name="first-day" value="mon" onchange="save();renderCalendar()"><span class="opt-dot"></span>Monday</label>
+          </div>
+        </div>
+        <div class="field">
+          <label>Reminders</label>
+          <label class="opt" style="width:100%;"><input type="checkbox" id="reminder-toggle" onchange="save();renderCalendar()"><span class="opt-dot"></span>Notify missed days</label>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-top:5px">Missed workday reminders use your current schedule.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT COLUMN ── -->
+    <div>
+
+      <!-- CALENDAR -->
+      <div class="card">
+        <div class="cal-header">
+          <span class="cal-month" id="cal-month-lbl">—</span>
+          <div class="cal-nav">
+            <button class="cal-nav-btn" onclick="prevMonth()">‹</button>
+            <button class="cal-nav-btn" onclick="nextMonth()">›</button>
+            <button class="cal-nav-btn" onclick="jumpToToday()">Today</button>
+          </div>
+        </div>
+
+        <div class="cal-grid" id="cal-grid">
+          <div class="cal-dow">SUN</div><div class="cal-dow">MON</div><div class="cal-dow">TUE</div>
+          <div class="cal-dow">WED</div><div class="cal-dow">THU</div><div class="cal-dow">FRI</div><div class="cal-dow">SAT</div>
+        </div>
+
+        <!-- Day editor (hidden until a day is clicked) -->
+        <div class="day-editor" id="day-editor" style="display:none">
+          <div class="day-editor-title" id="de-title">—</div>
+          <div class="field" style="margin-bottom:12px">
+            <label>Hours logged</label>
+            <div class="hrs-stepper">
+              <button class="hrs-btn" onclick="adjHrs(-1)">−</button>
+              <div class="hrs-display" id="de-hrs">8</div>
+              <button class="hrs-btn" onclick="adjHrs(1)">+</button>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:12px">
+            <label>Daily notes (optional)</label>
+            <textarea id="de-notes" placeholder="What did you work on today?"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:8px">
+            <label>Mark as</label>
+            <div class="opt-grid">
+              <label class="opt"><input type="radio" name="day-type" value="work" checked onchange="updateDayType()"><span class="opt-dot"></span>Work day</label>
+              <label class="opt"><input type="radio" name="day-type" value="off" onchange="updateDayType()"><span class="opt-dot"></span>Day off</label>
+              <label class="opt"><input type="radio" name="day-type" value="holiday" onchange="updateDayType()"><span class="opt-dot"></span>Holiday</label>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" style="flex:0;height:38px" onclick="deleteDay()">Delete</button>
+            <button class="btn btn-ghost btn-sm" style="flex:0;height:38px" onclick="closeEditor()">Cancel</button>
+            <button class="btn btn-sm" onclick="saveDay()">Save day</button>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="cal-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:var(--accent)"></div>Logged</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--bg2);border:1px solid var(--border)"></div>Work day</div>
+          <div class="leg-item"><div class="leg-dot" style="background:var(--bg3);border:1px dashed var(--border)"></div>Holiday</div>
+          <div class="leg-item"><div class="leg-dot" style="background:transparent;border:1px solid var(--border)"></div>Off</div>
+        </div>
+      </div>
+
+      <!-- MONTHLY SUMMARY -->
+      <div class="card card-monthly">
+        <div class="card-title">Monthly summary</div>
+        <div class="g2">
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">Hours this month</div>
+            <div style="font-family:var(--mono);font-size:28px;font-weight:300;color:var(--text);letter-spacing:-.03em" id="mo-hrs">0h</div>
+          </div>
+          <div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">Days logged</div>
+            <div style="font-family:var(--mono);font-size:28px;font-weight:300;color:var(--text);letter-spacing:-.03em" id="mo-days">0</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Search notes / hours</label>
+          <input type="text" id="log-search" placeholder="Search notes, type, or hours" oninput="renderCalendar();renderLogList()">
+        </div>
+        <div class="field" style="margin-bottom:14px">
+          <label style="font-size:11px"><input type="checkbox" id="filter-logged-only" onchange="renderCalendar();renderLogList()" style="vertical-align:middle;margin-right:8px">Show logged entries only</label>
+        </div>
+        <div class="field">
+          <label>Chart view</label>
+          <div class="opt-grid">
+            <label class="opt"><input type="radio" name="chart-view" value="month" onchange="save();renderCalendar()"><span class="opt-dot"></span>Month</label>
+            <label class="opt"><input type="radio" name="chart-view" value="week" onchange="save();renderCalendar()"><span class="opt-dot"></span>Week</label>
+            <label class="opt"><input type="radio" name="chart-view" value="year" onchange="save();renderCalendar()"><span class="opt-dot"></span>Year</label>
+          </div>
+        </div>
+        <div class="month-chart" id="month-chart"></div>
+        <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="printReport()">🖨️ Print report</button>
+          <button class="btn btn-ghost btn-sm" onclick="exportPDF()">📄 Export PDF</button>
+        </div>
+        <hr>
+        <div id="log-list" style="display:flex;flex-direction:column;gap:3px"></div>
+      </div>
+
+      <div class="card card-activity">
+        <div class="card-title">Activity log</div>
+        <div id="activity-log" style="display:flex;flex-direction:column;gap:8px;min-height:120px;"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:24px;font-family:var(--mono);font-size:10px;color:var(--text3)">Data stays on your device · Projections update as you log hours</div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════
+//  LOADER
+// ═══════════════════════════════════════════
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('loader').classList.add('hide'),2200);
+});
+
+// ═══════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════
+function toast(msg){
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2000);
+}
+function toggleTheme(){
+  const current=document.documentElement.dataset.theme==='dark'?'dark':'light';
+  const next=current==='dark'?'light':'dark';
+  setTheme(next);
+}
+(()=>{const t=localStorage.getItem('jrdz-theme');if(t){document.documentElement.dataset.theme=t;document.getElementById('theme-btn').textContent=t==='dark'?'●':'◑';}})();
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const PH_HOLIDAYS_2026 = [
+  '2026-01-01','2026-02-25','2026-04-02','2026-04-03','2026-04-04','2026-04-09',
+  '2026-05-01','2026-06-12','2026-08-21','2026-08-31','2026-11-01','2026-11-02',
+  '2026-11-30','2026-12-08','2026-12-24','2026-12-25','2026-12-30','2026-12-31'
+];
+let state={
+  targetHrs:2000,
+  startDate:'',
+  hpd:8,
+  workDays:[1,2,3,4,5],
+  excludePH:false,
+  firstDayOfWeek:'sun',
+  locale:'en-GB',
+  theme:'light',
+  chartView:'month',
+  showReminders:true,
+  history:[],
+  days:{} // key: 'YYYY-MM-DD' -> {hrs, notes, type: 'work'|'off'|'holiday'}
+};
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth();
+let selectedDate=null;
+
+// ═══════════════════════════════════════════
+//  PERSISTENCE
+// ═══════════════════════════════════════════
+function save(){
+  state.targetHrs=parseInt(document.getElementById('target-hrs').value)||2000;
+  state.startDate=document.getElementById('start-date').value;
+  state.hpd=parseInt(document.getElementById('hpd').value)||8;
+  state.excludePH=document.querySelector('input[name="ph"]:checked').value==='yes';
+  state.firstDayOfWeek=document.querySelector('input[name="first-day"]:checked')?.value||'sun';
+  state.locale=document.getElementById('locale-select').value||'en-GB';
+  state.chartView=document.querySelector('input[name="chart-view"]:checked')?.value||'month';
+  state.showReminders=document.getElementById('reminder-toggle').checked;
+  state.theme=document.getElementById('theme-select')?.value||state.theme;
+  document.getElementById('hpd-badge').textContent=state.hpd+'h';
+  setTheme(state.theme,false);
+  localStorage.setItem('jrdz-internship',JSON.stringify(state));
+}
+function load(){
+  const raw=localStorage.getItem('jrdz-internship');
+  if(raw){
+    try{const s=JSON.parse(raw);Object.assign(state,s);}catch(e){}
+  }
+  // Apply to DOM
+  document.getElementById('target-hrs').value=state.targetHrs;
+  document.getElementById('start-date').value=state.startDate;
+  document.getElementById('hpd').value=state.hpd;
+  document.getElementById('hpd-lbl').textContent=state.hpd+'h';
+  document.getElementById('hpd-badge').textContent=state.hpd+'h';
+  document.querySelector(`input[name="ph"][value="${state.excludePH?'yes':'no'}"]`).checked=true;
+  document.querySelector(`input[name="first-day"][value="${state.firstDayOfWeek}"]`).checked=true;
+  document.querySelector(`input[name="chart-view"][value="${state.chartView}"]`).checked=true;
+  document.getElementById('locale-select').value=state.locale;
+  document.getElementById('theme-select').value=state.theme;
+  document.getElementById('reminder-toggle').checked=state.showReminders;
+  setTheme(state.theme,false);
+  renderDayPills();
+  syncWorkweekPresetSelection();
+}
+function resetAll(){
+  if(!confirm('Reset all data? This cannot be undone.'))return;
+  state={targetHrs:2000,startDate:'',hpd:8,workDays:[1,2,3,4,5],excludePH:false,firstDayOfWeek:'sun',locale:'en-GB',theme:'light',chartView:'month',showReminders:true,history:[],days:{}};
+  localStorage.removeItem('jrdz-internship');
+  load();recalc();renderCalendar();
+  addHistory('Reset all data','All entries removed');
+  toast('Data reset');
+}
+
+// ═══════════════════════════════════════════
+//  WORK DAYS
+// ═══════════════════════════════════════════
+function toggleDay(d){
+  const idx=state.workDays.indexOf(d);
+  if(idx>-1)state.workDays.splice(idx,1);
+  else state.workDays.push(d);
+  renderDayPills();
+  syncWorkweekPresetSelection();
+  save();recalc();renderCalendar();
+}
+function renderDayPills(){
+  document.querySelectorAll('.day-pill').forEach(btn=>{
+    const d=parseInt(btn.dataset.d);
+    btn.classList.toggle('on',state.workDays.includes(d));
+  });
+}
+
+// ═══════════════════════════════════════════
+//  CALCULATIONS
+// ═══════════════════════════════════════════
+function isHoliday(dateStr){return PH_HOLIDAYS_2026.includes(dateStr);}
+function isWorkDay(date){
+  const dow=date.getDay();
+  const ds=dateStr(date);
+  if(state.days[ds]){const t=state.days[ds].type;if(t==='off'||t==='holiday')return false;if(t==='work')return true;}
+  if(state.excludePH&&isHoliday(ds))return false;
+  return state.workDays.includes(dow);
+}
+function dateStr(d){return d.toISOString().slice(0,10);}
+function totalLoggedHrs(){
+  return Object.values(state.days).filter(d=>d.type!=='off'&&d.type!=='holiday').reduce((s,d)=>s+(d.hrs||0),0);
+}
+function daysWorked(){return Object.values(state.days).filter(d=>d.type!=='off'&&d.type!=='holiday'&&(d.hrs||0)>0).length;}
+function projectEndDate(){
+  const logged=totalLoggedHrs();
+  const remaining=Math.max(0,state.targetHrs-logged);
+  if(remaining===0)return 'Done! 🎉';
+  const hpd=state.hpd||8;
+  let daysNeeded=Math.ceil(remaining/hpd);
+  let cur=new Date();cur.setHours(0,0,0,0);
+  let count=0;
+  while(count<daysNeeded&&count<3650){
+    cur.setDate(cur.getDate()+1);
+    if(isWorkDay(cur))count++;
+  }
+  return cur.toLocaleDateString(state.locale,{day:'numeric',month:'short',year:'numeric'});
+}
+function workDaysRemaining(){
+  const logged=totalLoggedHrs();
+  const remaining=Math.max(0,state.targetHrs-logged);
+  if(remaining===0)return 0;
+  const hpd=state.hpd||8;
+  return Math.ceil(remaining/hpd);
+}
+function recalc(){
+  const logged=totalLoggedHrs();
+  const target=state.targetHrs||2000;
+  const pct=Math.min(100,Math.round((logged/target)*100));
+  const remaining=Math.max(0,target-logged);
+  document.getElementById('prog-hrs-done').textContent=logged+'h';
+  document.getElementById('prog-target').textContent=target;
+  document.getElementById('prog-bar').style.width=pct+'%';
+  document.getElementById('prog-pct').textContent=pct+'%';
+  const dw=daysWorked();
+  document.getElementById('prog-days-lbl').textContent=dw+' day'+(dw!==1?'s':'')+' logged';
+  document.getElementById('prog-remaining').textContent=remaining+'h';
+  document.getElementById('prog-proj-end').textContent=projectEndDate();
+  document.getElementById('prog-days-worked').textContent=dw;
+  document.getElementById('prog-days-rem').textContent=workDaysRemaining()+' days';
+  const missed=state.showReminders?missedWorkdays():0;
+  document.getElementById('reminder-note').textContent=missed?`Reminder: ${missed} missed workday${missed!==1?'s':''}.`:'Reminders are off.';
+}
+
+// ═══════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════
+const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getSearchFilter(){
+  return {
+    search:document.getElementById('log-search').value.trim().toLowerCase(),
+    loggedOnly:document.getElementById('filter-logged-only').checked
+  };
+}
+function matchesSearch(ds,dd,search){
+  if(!search)return true;
+  if(String(dd.hrs||'').includes(search))return true;
+  if(dd.type&&dd.type.toLowerCase().includes(search))return true;
+  if(dd.notes&&dd.notes.toLowerCase().includes(search))return true;
+  if(ds.includes(search))return true;
+  return false;
+}
+function renderCalendar(){
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayStr=dateStr(today);
+  const monthLabel=new Date(calYear,calMonth,1).toLocaleDateString(state.locale,{month:'long',year:'numeric'});
+  document.getElementById('cal-month-lbl').textContent=monthLabel;
+  const {search,loggedOnly}=getSearchFilter();
+  const labels=getWeekdayLabels();
+  document.querySelectorAll('.cal-dow').forEach((el,i)=>el.textContent=labels[i]);
+
+  const grid=document.getElementById('cal-grid');
+  // Remove all day cells (keep 7 DOW headers)
+  while(grid.children.length>7)grid.removeChild(grid.lastChild);
+
+  const firstDow=(new Date(calYear,calMonth,1).getDay()-firstWeekdayIndex()+7)%7;
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+
+  // Empty cells before first day
+  for(let i=0;i<firstDow;i++){
+    const el=document.createElement('div');el.className='cal-day empty';grid.appendChild(el);
+  }
+
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const date=new Date(calYear,calMonth,d);
+    const dayData=state.days[ds]||{};
+    const isToday=ds===todayStr;
+    const isPast=date<today;
+    const manualType=dayData.type;
+    const isOff=manualType==='off'||(manualType!=='work'&&!state.workDays.includes(date.getDay()))||(state.excludePH&&isHoliday(ds)&&manualType!=='work');
+    const isHol=(manualType==='holiday')||(state.excludePH&&isHoliday(ds)&&manualType!=='off');
+    const isLogged=dayData.hrs>0&&manualType!=='off'&&manualType!=='holiday';
+    const matched=matchesSearch(ds,dayData,search);
+
+    const el=document.createElement('div');
+    let cls='cal-day';
+    if(isLogged)cls+=' logged';
+    else if(isHol)cls+=' holiday';
+    else if(isOff)cls+=' off';
+    else cls+=' work';
+    if(isPast&&!isLogged)cls+=' past';
+    if(isToday)cls+=' today-ring';
+    if((loggedOnly && !isLogged) || (search && !matched)) cls+=' match-fade';
+    el.className=cls;
+    el.innerHTML=`<span class="day-num">${d}</span>${isLogged?`<span class="day-hrs">${dayData.hrs}h</span>`:''}`;
+    el.onclick=()=>openEditor(ds,d);
+    grid.appendChild(el);
+  }
+
+  // Monthly summary
+  let moHrs=0,moDays=0;
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dd=state.days[ds];
+    if(dd&&dd.hrs>0&&dd.type!=='off'&&dd.type!=='holiday'){moHrs+=dd.hrs;moDays++;}
+  }
+  document.getElementById('mo-hrs').textContent=moHrs+'h';
+  document.getElementById('mo-days').textContent=moDays;
+
+  renderMonthlyChart();
+  renderLogList();
+  renderHistory();
+}
+
+function renderMonthlyChart(){
+  const chart=document.getElementById('month-chart');
+  const view=state.chartView||'month';
+  const data=[];
+  let maxValue=1;
+
+  if(view==='week'){
+    const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+    let weekTotal=0;
+    let weekIndex=1;
+    for(let d=1;d<=daysInMonth;d++){
+      const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dd=state.days[ds];
+      const hrs=(dd&&dd.hrs>0&&dd.type!=='off'&&dd.type!=='holiday')?dd.hrs:0;
+      weekTotal+=hrs;
+      if(new Date(calYear,calMonth,d).getDay()===firstWeekdayIndex()||d===daysInMonth){
+        data.push({label:`W${weekIndex}`,value:weekTotal});
+        maxValue=Math.max(maxValue,weekTotal);
+        weekTotal=0;
+        weekIndex++;
+      }
+    }
+  } else if(view==='year'){
+    for(let m=0;m<12;m++){
+      const daysInMonth=new Date(calYear,m+1,0).getDate();
+      let total=0;
+      for(let d=1;d<=daysInMonth;d++){
+        const ds=`${calYear}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const dd=state.days[ds];
+        if(dd&&dd.hrs>0&&dd.type!=='off'&&dd.type!=='holiday') total+=dd.hrs;
+      }
+      const label=new Date(calYear,m,1).toLocaleDateString(state.locale,{month:'short'});
+      data.push({label,total});
+      maxValue=Math.max(maxValue,total);
+    }
+  } else {
+    const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+    for(let d=1;d<=daysInMonth;d++){
+      const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dd=state.days[ds];
+      const hrs=(dd&&dd.hrs>0&&dd.type!=='off'&&dd.type!=='holiday')?dd.hrs:0;
+      data.push({label:String(d),value:hrs});
+      maxValue=Math.max(maxValue,hrs);
+    }
+  }
+
+  chart.innerHTML=data.map(item=>{
+    const pct=maxValue?Math.max(2,Math.round((item.value/maxValue)*100)):0;
+    return `<div class="chart-bar" title="${item.label} — ${item.value}h"><div class="chart-fill" style="height:${pct}%"></div><div class="chart-day">${item.label}</div></div>`;
+  }).join('');
+}
+
+function renderLogList(){
+  const {search,loggedOnly}=getSearchFilter();
+  const logList=document.getElementById('log-list');
+  const daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+  const entries=[];
+  for(let d=1;d<=daysInMonth;d++){
+    const ds=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dd=state.days[ds];
+    if(!dd||(dd.hrs<=0&&!dd.notes))continue;
+    const isLogged=dd.hrs>0&&dd.type!=='off'&&dd.type!=='holiday';
+    if(loggedOnly && !isLogged)continue;
+    if(!matchesSearch(ds,dd,search))continue;
+    entries.push({ds,d,dd});
+  }
+  if(!entries.length){
+    logList.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;padding:16px 0">No entries match</div>';
+    return;
+  }
+  logList.innerHTML=entries.map(({ds,d,dd})=>`
+      <div style="display:flex;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:4px;cursor:pointer;transition:all .14s" onmouseenter="this.style.borderColor='var(--border2)'" onmouseleave="this.style.borderColor='var(--border)'" onclick="openEditor('${ds}',${d})">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text3);flex-shrink:0;width:54px">${new Date(ds+'T00:00:00').toLocaleDateString(state.locale,{day:'numeric',month:'short'})}</div>
+        <div style="flex:1">
+          ${dd.hrs?`<div style="font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text)">${dd.hrs}h</div>`:''}
+          ${dd.notes?`<div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${dd.notes}</div>`:''}
+        </div>
+      </div>`).join('');
+}
+
+function prevMonth(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();}
+function nextMonth(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();}
+function jumpToToday(){
+  const today=new Date();
+  calYear=today.getFullYear();
+  calMonth=today.getMonth();
+  renderCalendar();
+}
+function applyWorkweekPreset(preset){
+  if(preset==='mon-fri') state.workDays=[1,2,3,4,5];
+  else if(preset==='tue-sat') state.workDays=[2,3,4,5,6];
+  else if(preset==='custom') return;
+  state.workDays.sort((a,b)=>a-b);
+  addHistory('Applied workweek preset',preset);
+  renderDayPills();
+  save();
+  recalc();
+  renderCalendar();
+}
+function syncWorkweekPresetSelection(){
+  const days=state.workDays.slice().sort((a,b)=>a-b);
+  const monFri=[1,2,3,4,5];
+  const tueSat=[2,3,4,5,6];
+  const preset = JSON.stringify(days)===JSON.stringify(monFri)?'mon-fri':JSON.stringify(days)===JSON.stringify(tueSat)?'tue-sat':'custom';
+  const el=document.querySelector(`input[name="work-preset"][value="${preset}"]`);
+  if(el)el.checked=true;
+}
+
+function setTheme(value, saveState=true){
+  const d=document.documentElement;
+  d.dataset.theme=value;
+  document.getElementById('theme-btn').textContent=value==='dark'?'●':'◑';
+  document.getElementById('theme-select').value=value;
+  if(saveState){
+    state.theme=value;
+    localStorage.setItem('jrdz-theme', value);
+  } else {
+    const current=localStorage.getItem('jrdz-theme');
+    if(!current) localStorage.setItem('jrdz-theme', value);
+  }
+}
+
+function addHistory(action, detail){
+  const timestamp=new Date().toISOString();
+  state.history.unshift({timestamp,action,detail});
+  if(state.history.length>50) state.history.length=50;
+  save();
+}
+
+function renderHistory(){
+  const list=document.getElementById('activity-log');
+  if(!state.history?.length){
+    list.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--text3);text-align:center;padding:16px 0">No recent activity</div>';
+    return;
+  }
+  list.innerHTML=state.history.slice(0,10).map(item=>{
+    const dt=new Date(item.timestamp).toLocaleString(state.locale,{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    return `<div style="padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:11px;color:var(--text);line-height:1.4"><strong>${item.action}</strong><br><span style="color:var(--text3)">${item.detail||''}</span><br><span style="color:var(--text3);font-size:10px">${dt}</span></div>`;
+  }).join('');
+}
+
+function getWeekdayLabels(){
+  const days=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  if(state.firstDayOfWeek==='mon'){
+    return days.slice(1).concat(days[0]);
+  }
+  return days;
+}
+
+function firstWeekdayIndex(){
+  return state.firstDayOfWeek==='mon'?1:0;
+}
+
+function missedWorkdays(){
+  if(!state.startDate) return 0;
+  const start=new Date(state.startDate+'T00:00:00');
+  const today=new Date(); today.setHours(0,0,0,0);
+  if(start>=today) return 0;
+  let missed=0;
+  for(let cur=new Date(start);cur<today;cur.setDate(cur.getDate()+1)){
+    const ds=dateStr(cur);
+    if(isWorkDay(cur) && (!state.days[ds] || state.days[ds].hrs===0)){
+      missed++;
+    }
+  }
+  return missed;
+}
+
+function printReport(){
+  const total=totalLoggedHrs();
+  const entries=Object.keys(state.days).sort().map(ds=>({ds,dd:state.days[ds]})).filter(item=>item.dd&&(item.dd.hrs>0||item.dd.notes));
+  const summary = `
+    <div style="font-family:Arial,Helvetica,sans-serif;margin-bottom:20px">
+      <h1>Internship Tracker Report</h1>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:14px">
+        <div><strong>Target hours:</strong> ${state.targetHrs}h</div>
+        <div><strong>Start date:</strong> ${state.startDate||'—'}</div>
+        <div><strong>Hours logged:</strong> ${total}h</div>
+        <div><strong>Days logged:</strong> ${daysWorked()}</div>
+        <div><strong>Missed days:</strong> ${missedWorkdays()}</div>
+        <div><strong>Locale:</strong> ${state.locale}</div>
+      </div>
+    </div>
+  `;
+  const rows = entries.length ? entries.map(({ds,dd}) => {
+    const date = new Date(ds+'T00:00:00');
+    return `
+      <tr>
+        <td>${date.toLocaleDateString(state.locale,{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td>${dd.type||'work'}</td>
+        <td>${dd.hrs||0}</td>
+        <td>${(dd.notes||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</td>
+      </tr>`;
+  }).join('') : `<tr><td colspan="4" style="text-align:center;padding:16px;color:#666">No entries to print</td></tr>`;
+  const html = `
+    <html>
+    <head>
+      <title>Internship Tracker Report</title>
+      <style>body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;margin:0}h1{font-size:26px;margin-bottom:18px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{border:1px solid #ddd;padding:10px;text-align:left;vertical-align:top}th{background:#f4f4f4}blockquote{margin:0;padding:12px;background:#f9f9f9;border-left:4px solid #ccc;}</style>
+    </head>
+    <body>
+      ${summary}
+      <table>
+        <thead><tr><th>Date</th><th>Type</th><th>Hours</th><th>Notes</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </body>
+    </html>`;
+  const printWindow = window.open('','_blank','width=900,height=700');
+  if(!printWindow){toast('Allow popups to print report');return;}
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+function saveAndRender(){
+  save();
+  recalc();
+  renderCalendar();
+}
+
+// ═══════════════════════════════════════════
+//  DAY EDITOR
+// ═══════════════════════════════════════════
+function openEditor(ds,d){
+  selectedDate=ds;
+  const dd=state.days[ds]||{};
+  const date=new Date(ds+'T00:00:00');
+  const dayName=date.toLocaleDateString(state.locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('de-title').textContent=dayName;
+  document.getElementById('de-hrs').textContent=dd.hrs!=null?dd.hrs:state.hpd;
+  document.getElementById('de-notes').value=dd.notes||'';
+  const typ=dd.type||'work';
+  document.querySelector(`input[name="day-type"][value="${typ}"]`).checked=true;
+  updateDayType();
+  document.getElementById('day-editor').style.display='block';
+  document.getElementById('day-editor').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function closeEditor(){
+  document.getElementById('day-editor').style.display='none';
+  selectedDate=null;
+}
+function adjHrs(delta){
+  const el=document.getElementById('de-hrs');
+  const cur=parseInt(el.textContent)||0;
+  el.textContent=Math.max(0,Math.min(24,cur+delta));
+}
+function updateDayType(){
+  const typ=document.querySelector('input[name="day-type"]:checked').value;
+  const hrsWrap=document.getElementById('de-hrs').closest('.field');
+  // hrs field only shown for work days
+  hrsWrap.style.opacity=typ==='work'?'1':'0.4';
+}
+function saveDay(){
+  if(!selectedDate)return;
+  const hrs=parseInt(document.getElementById('de-hrs').textContent)||0;
+  const notes=document.getElementById('de-notes').value.trim();
+  const typ=document.querySelector('input[name="day-type"]:checked').value;
+  state.days[selectedDate]={hrs:typ==='work'?hrs:0,notes,type:typ};
+  addHistory('Saved day', selectedDate);
+  save();recalc();renderCalendar();closeEditor();
+  toast('Day saved');
+}
+function deleteDay(){
+  if(!selectedDate)return;
+  if(!confirm('Delete this day entry?'))return;
+  delete state.days[selectedDate];
+  addHistory('Deleted day', selectedDate);
+  save();recalc();renderCalendar();closeEditor();
+  toast('Entry deleted');
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════
+function exportCSV(){
+  const rows=['Date,Type,Hours,Notes'];
+  const sorted=Object.keys(state.days).sort();
+  for(const ds of sorted){
+    const dd=state.days[ds];
+    const notes=(dd.notes||'').replace(/"/g,'""');
+    rows.push(`${ds},${dd.type||'work'},${dd.hrs||0},"${notes}"`);
+  }
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='internship-log.csv';a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV exported');
+}
+
+function exportPDF(){
+  const total=totalLoggedHrs();
+  const entries=Object.keys(state.days).sort().map(ds=>({ds,dd:state.days[ds]})).filter(item=>item.dd&&(item.dd.hrs>0||item.dd.notes));
+  const summary = `
+    <div class="report-header">
+      <h1>Internship Tracker Report</h1>
+      <div class="report-meta">
+        <div><strong>Target hours:</strong> ${state.targetHrs}h</div>
+        <div><strong>Start date:</strong> ${state.startDate || '—'}</div>
+        <div><strong>Hours logged:</strong> ${total}h</div>
+        <div><strong>Days logged:</strong> ${daysWorked()}</div>
+        <div><strong>Remaining:</strong> ${Math.max(0,state.targetHrs-total)}h</div>
+        <div><strong>Projected end:</strong> ${projectEndDate()}</div>
+      </div>
+    </div>
+  `;
+  const rows = entries.length ? entries.map(({ds,dd}) => {
+    const date = new Date(ds+'T00:00:00');
+    return `
+      <tr>
+        <td>${date.toLocaleDateString(state.locale,{day:'numeric',month:'short',year:'numeric'})}</td>
+        <td>${dd.type||'work'}</td>
+        <td>${dd.hrs||0}</td>
+        <td>${dd.notes?dd.notes.replace(/</g,'&lt;').replace(/>/g,'&gt;'):'—'}</td>
+      </tr>`;
+  }).join('') : `<tr><td colspan="4" style="text-align:center;padding:16px;color:#666">No entries to export</td></tr>`;
+
+  const html = `
+    <html>
+    <head>
+      <title>Internship Tracker PDF</title>
+      <style>
+        body{font-family:Arial,Helvetica,sans-serif;color:#111;padding:24px;margin:0}
+        h1{font-size:24px;margin-bottom:12px}
+        .report-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+        .report-meta div{font-size:14px;line-height:1.6}
+        table{width:100%;border-collapse:collapse;font-size:13px}
+        th,td{border:1px solid #ddd;padding:10px;text-align:left;vertical-align:top}
+        th{background:#f4f4f4}
+        @media print{body{padding:12px}} 
+      </style>
+    </head>
+    <body>
+      ${summary}
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Type</th><th>Hours</th><th>Notes</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </body>
+    </html>`;
+
+  const printWindow = window.open('','_blank','width=900,height=700');
+  if(!printWindow){
+    toast('Unable to open PDF window. Please allow popups.');
+    return;
+  }
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+load();
+if(!state.startDate){
+  const today=new Date();
+  document.getElementById('start-date').value=today.toISOString().slice(0,10);
+  state.startDate=today.toISOString().slice(0,10);
+}
+recalc();
+renderCalendar();
+
+// Sync range display on slider move
+document.getElementById('hpd').addEventListener('input',function(){
+  document.getElementById('hpd-lbl').textContent=this.value+'h';
+  document.getElementById('hpd-badge').textContent=this.value+'h';
+});
+</script>
+</body>
+</html>

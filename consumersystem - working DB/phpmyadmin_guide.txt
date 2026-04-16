@@ -1,0 +1,161 @@
+═══════════════════════════════════════════════════════════════════════
+  PELCO III CONSUMER MANAGEMENT SYSTEM v2.0
+  DATABASE SETUP GUIDE (phpMyAdmin)
+═══════════════════════════════════════════════════════════════════════
+
+─────────────────────────────────────────────────────────────────────
+1. CREATE THE DATABASE
+─────────────────────────────────────────────────────────────────────
+CREATE DATABASE IF NOT EXISTS consumer_db 
+  CHARACTER SET utf8mb4 
+  COLLATE utf8mb4_unicode_ci;
+
+USE consumer_db;
+
+
+─────────────────────────────────────────────────────────────────────
+2. CREATE ALL TABLES
+─────────────────────────────────────────────────────────────────────
+
+-- Admin users table
+CREATE TABLE IF NOT EXISTS users (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    username    VARCHAR(50)  NOT NULL UNIQUE,
+    password    VARCHAR(255) NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- Active consumers table
+CREATE TABLE IF NOT EXISTS consumers (
+    id               INT AUTO_INCREMENT PRIMARY KEY,
+    accountnumber    VARCHAR(8)   NOT NULL UNIQUE,
+    first_name       VARCHAR(100),
+    last_name        VARCHAR(100),
+    middle_name      VARCHAR(100),
+    gender           VARCHAR(20),
+    birthdate        DATE,
+    address          TEXT,
+    contact_number   VARCHAR(20),
+    email            VARCHAR(100),
+    photo            VARCHAR(255),
+    SerialNumber     VARCHAR(100),
+    MeterBrand       VARCHAR(100),
+    status           TINYINT      DEFAULT 1 COMMENT '1=Active, 4=Inactive, 5=Pull-Out',
+    present_reading  DECIMAL(10,2) DEFAULT 0.00,
+    previous_reading DECIMAL(10,2) DEFAULT 0.00,
+    kilowatthour     DECIMAL(10,2) DEFAULT 0.00,
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_accountnumber (accountnumber),
+    INDEX idx_status (status),
+    INDEX idx_name (last_name, first_name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- Archive table (mirrors consumers + archived_at timestamp)
+CREATE TABLE IF NOT EXISTS archive (
+    id               INT PRIMARY KEY,
+    accountnumber    VARCHAR(8),
+    first_name       VARCHAR(100),
+    last_name        VARCHAR(100),
+    middle_name      VARCHAR(100),
+    gender           VARCHAR(20),
+    birthdate        DATE,
+    address          TEXT,
+    contact_number   VARCHAR(20),
+    email            VARCHAR(100),
+    photo            VARCHAR(255),
+    SerialNumber     VARCHAR(100),
+    MeterBrand       VARCHAR(100),
+    status           TINYINT,
+    present_reading  DECIMAL(10,2),
+    previous_reading DECIMAL(10,2),
+    kilowatthour     DECIMAL(10,2),
+    archived_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_archived_at (archived_at),
+    INDEX idx_accountnumber (accountnumber)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- Activity log table (NEW in v2.0)
+-- Tracks all admin actions: login, logout, register, edit, archive
+CREATE TABLE IF NOT EXISTS activity_log (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    admin_user  VARCHAR(100),
+    action      VARCHAR(50)  COMMENT 'LOGIN, LOGOUT, REGISTER, EDIT, ARCHIVE',
+    detail      TEXT,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_admin (admin_user),
+    INDEX idx_action (action),
+    INDEX idx_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+─────────────────────────────────────────────────────────────────────
+3. CREATE ADMIN ACCOUNT
+─────────────────────────────────────────────────────────────────────
+
+-- Plain text password (for quick setup, change immediately)
+INSERT INTO users (username, password) VALUES ('admin', 'admin123');
+
+-- OR use a hashed password (recommended for production):
+-- In PHP run: echo password_hash('your_secure_password', PASSWORD_DEFAULT);
+-- Then insert the hash:
+-- INSERT INTO users (username, password) VALUES ('admin', '$2y$12$HASH...');
+
+
+─────────────────────────────────────────────────────────────────────
+4. OPTIONAL: SAMPLE TEST DATA
+─────────────────────────────────────────────────────────────────────
+
+INSERT INTO consumers 
+(accountnumber, first_name, last_name, middle_name, gender, birthdate, address, contact_number, email, SerialNumber, MeterBrand, status, previous_reading, present_reading, kilowatthour)
+VALUES
+('10000001', 'Juan',  'Dela Cruz', 'Santos',   'Male',   '1985-06-15', 'Brgy. San Juan, Apalit, Pampanga', '09171234567', 'juan@email.com', 'SN-001', 'Landis+Gyr', 1, 1200.00, 1350.00, 150.00),
+('10000002', 'Maria', 'Santos',    'Reyes',    'Female', '1990-03-22', 'Brgy. Sulipan, Apalit, Pampanga', '09281234567', 'maria@email.com','SN-002', 'Elster',     1, 800.00,  950.00,  150.00),
+('10000003', 'Pedro', 'Reyes',     'Garcia',   'Male',   '1978-11-08', 'Brgy. Tabuyoc, Apalit, Pampanga', '09391234567', 'pedro@email.com','SN-003', 'Holley',     4, 2100.00, 2100.00,   0.00),
+('10000004', 'Ana',   'Garcia',    'Lim',      'Female', '1995-07-30', 'Brgy. Calantipe, Apalit, Pampanga','09501234567', 'ana@email.com',  'SN-004', 'Itron',     5,  500.00,  500.00,   0.00);
+
+
+─────────────────────────────────────────────────────────────────────
+5. UPGRADE NOTES (v1.0 → v2.0)
+─────────────────────────────────────────────────────────────────────
+
+If upgrading from v1.0, run these ALTER statements:
+
+ALTER TABLE consumers 
+  ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  ADD INDEX idx_status (status),
+  ADD INDEX idx_name (last_name, first_name);
+
+ALTER TABLE archive 
+  ADD INDEX idx_archived_at (archived_at),
+  ADD INDEX idx_accountnumber (accountnumber);
+
+-- Then create the activity_log table (from step 2 above).
+
+
+─────────────────────────────────────────────────────────────────────
+6. SECURITY RECOMMENDATIONS
+─────────────────────────────────────────────────────────────────────
+
+  ✅ Change the default admin password immediately after setup
+  ✅ Use password_hash() for all passwords in production
+  ✅ Ensure the 'uploads/' directory has a .htaccess restricting PHP execution
+  ✅ Keep db.php out of the web root or restrict access
+  ✅ Set up regular database backups
+  ✅ Use HTTPS in production
+
+   .htaccess for uploads folder:
+   ─────────────────────────────
+   Options -ExecCGI
+   AddHandler cgi-script .php .php3 .php4 .php5 .phtml .pl .py .jsp
+   <FilesMatch "\.php$">
+     Require all denied
+   </FilesMatch>
+
+═══════════════════════════════════════════════════════════════════════
+  © 2026 PELCO III Consumer Management System v2.0
+═══════════════════════════════════════════════════════════════════════

@@ -1,0 +1,121 @@
+http://localhost/css_system/
+
+http://localhost/css_system/setup.php
+
+http://localhost/phpmyadmin/index.php?route=/database/structure&db=customer_service_db
+
+admin 
+password
+
+staff1
+staff123
+
+
+
+-- ══════════════════════════════════════════════════════════════════════
+--  PELCO III — Customer Service System
+--  FULL SETUP QUERY — Run this in phpMyAdmin > SQL tab
+--  Safe to run on a FRESH install (first time)
+-- ══════════════════════════════════════════════════════════════════════
+
+CREATE DATABASE IF NOT EXISTS customer_service_db
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_unicode_ci;
+
+USE customer_service_db;
+
+-- ── MAIN RECORDS TABLE ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS cs_records (
+    id               INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
+    reference_no     VARCHAR(30)     NOT NULL UNIQUE,
+    account_number   VARCHAR(50)     NOT NULL,
+    account_name     VARCHAR(150)    NOT NULL,
+    address          TEXT            NOT NULL,
+    landmark         VARCHAR(255)    DEFAULT NULL,
+    contact_no       VARCHAR(20)     NOT NULL,
+    messenger_caller VARCHAR(150)    NOT NULL,
+    concern          VARCHAR(150)    NOT NULL,
+    area_dept        VARCHAR(150)    NOT NULL,
+    date_forwarded   DATE            NOT NULL,
+    notes            TEXT            DEFAULT NULL,
+    status           VARCHAR(100)    NOT NULL DEFAULT 'Open',
+    created_at       TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    INDEX idx_reference (reference_no),
+    INDEX idx_status    (status),
+    INDEX idx_date      (date_forwarded),
+    INDEX idx_concern   (concern),
+    INDEX idx_area      (area_dept)
+) ENGINE=InnoDB;
+
+-- ── ARCHIVE TABLE ─────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS cs_records_archive (
+    id               INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
+    original_id      INT UNSIGNED    NOT NULL,
+    reference_no     VARCHAR(30)     NOT NULL,
+    account_number   VARCHAR(50)     NOT NULL,
+    account_name     VARCHAR(150)    NOT NULL,
+    address          TEXT            NOT NULL,
+    landmark         VARCHAR(255)    DEFAULT NULL,
+    contact_no       VARCHAR(20)     NOT NULL,
+    messenger_caller VARCHAR(150)    NOT NULL,
+    concern          VARCHAR(150)    NOT NULL,
+    area_dept        VARCHAR(150)    NOT NULL,
+    date_forwarded   DATE            NOT NULL,
+    notes            TEXT            DEFAULT NULL,
+    status           VARCHAR(100)    DEFAULT NULL,
+    created_at       TIMESTAMP       NULL,
+    archived_at      TIMESTAMP       DEFAULT CURRENT_TIMESTAMP,
+    archived_by      VARCHAR(100)    DEFAULT 'system',
+    INDEX idx_orig_id (original_id),
+    INDEX idx_ref_no  (reference_no)
+) ENGINE=InnoDB;
+
+-- ── DROPDOWN OPTIONS TABLE ────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS cs_dropdown_options (
+    id          INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
+    category    VARCHAR(50)     NOT NULL,
+    value       VARCHAR(150)    NOT NULL,
+    sort_order  INT UNSIGNED    DEFAULT 0,
+    is_active   TINYINT(1)      DEFAULT 1,
+    UNIQUE KEY uq_cat_val (category, value),
+    INDEX idx_category (category)
+) ENGINE=InnoDB;
+
+-- ── SEED DROPDOWN: CONCERN ────────────────────────────────────────────
+INSERT IGNORE INTO cs_dropdown_options (category, value, sort_order) VALUES
+('concern', 'Net Metering',                  1),
+('concern', 'No Power',                      2),
+('concern', 'New Application Inquiry',       3),
+('concern', 'Follow-up',                     4),
+('concern', 'Bill Inquiry',                  5),
+('concern', 'Loose Connection',              6),
+('concern', 'Collection (Cheque)',           7),
+('concern', 'Relocation (Lines/Meter)',      8),
+('concern', 'Trim Trees',                    9),
+('concern', 'Reconnection',                 10),
+('concern', 'PSR Concerns',                 11),
+('concern', 'Change Name',                  12),
+('concern', 'Inspection',                   13),
+('concern', 'Downed Powerline',             14),
+('concern', 'Sparkling Lines',              15),
+('concern', 'Complaints on KWLT/Meter',     16),
+('concern', 'Busted Meter / Transformer',   17),
+('concern', 'Low Voltage',                  18),
+('concern', 'Payment Center',               19),
+('concern', 'Apprehended',                  20),
+('concern', 'Illegal Tapping',              21);
+
+-- ── SEED DROPDOWN: AREA / DEPT ────────────────────────────────────────
+INSERT IGNORE INTO cs_dropdown_options (category, value, sort_order) VALUES
+('area_dept', 'ISD',        1),
+('area_dept', 'AUDIT',      2),
+('area_dept', 'CORPLAN',    3),
+('area_dept', 'FSD',        4),
+('area_dept', 'OGM',        5),
+('area_dept', 'APALIT',     6),
+('area_dept', 'MACABEBE',   7),
+('area_dept', 'MASANTOL',   8),
+('area_dept', 'STO TOMAS',  9),
+('area_dept', 'MINALIN',   10),
+('area_dept', 'SAN SIMON', 11);
